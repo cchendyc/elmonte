@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>El Monte</title>
+    <script>
+      // GitHub Pages SPA fallback: rewrite /repo/path → /repo/?/path
+      (function () {
+        var segmentCount = 1;
+        var parts = location.pathname.split("/").filter(Boolean);
+        var base = "/" + parts.slice(0, segmentCount).join("/") + "/";
+        var rest = parts.slice(segmentCount).join("/");
+        var query = location.search ? "&" + location.search.slice(1) : "";
+        var hash = location.hash || "";
+        location.replace(base + "?/" + rest.replace(/&/g, "~and~") + query + hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

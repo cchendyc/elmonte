@@ -1,0 +1,3178 @@
+[
+  {
+    "personId": "person-aaron-edlin",
+    "name": "Aaron Edlin",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-andreas-schaab",
+    "name": "Andreas Schaab",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-andres-rodriguez-clare",
+    "name": "Andrés Rodríguez-Clare",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-barry-eichengreen",
+    "name": "Barry Eichengreen",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ben-handel",
+    "name": "Ben Handel",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benjamin-hermalin",
+    "name": "Benjamin E. Hermalin",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benjamin-faber",
+    "name": "Benjamin Faber",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benjamin-schoefer",
+    "name": "Benjamin Schoefer",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-bryan-graham",
+    "name": "Bryan S. Graham",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-carolyn-stein",
+    "name": "Carolyn Stein",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-cecile-gaubert",
+    "name": "Cecile Gaubert",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-chen-lian",
+    "name": "Chen Lian",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-chenzi-xu",
+    "name": "Chenzi Xu",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-chris-shannon",
+    "name": "Chris Shannon",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christopher-walters",
+    "name": "Christopher Walters",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-danny-yagan",
+    "name": "Danny Yagan",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-sraer",
+    "name": "David Sraer",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-demian-pouzo",
+    "name": "Demian Pouzo",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-dmitry-taubinsky",
+    "name": "Dmitry Taubinsky",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-edward-miguel",
+    "name": "Edward Miguel",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-emi-nakamura",
+    "name": "Emi Nakamura",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-emmanuel-saez",
+    "name": "Emmanuel Saez",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-enrico-moretti",
+    "name": "Enrico Moretti",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-federico-crippa",
+    "name": "Federico Crippa",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-federico-echenique",
+    "name": "Federico Echenique",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-frederico-finan",
+    "name": "Frederico Finan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-gabriel-zucman",
+    "name": "Gabriel Zucman",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-gautam-rao",
+    "name": "Gautam Rao",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-giacomo-lanzani",
+    "name": "Giacomo Lanzani",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-hilary-hoynes",
+    "name": "Hilary Hoynes",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jesse-rothstein",
+    "name": "Jesse Rothstein",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jon-kolstad",
+    "name": "Jon Kolstad",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jon-steinsson",
+    "name": "Jón Steinsson",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-joseph-shapiro",
+    "name": "Joseph Shapiro",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kirill-borusyak",
+    "name": "Kirill Borusyak",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mathilde-munoz",
+    "name": "Mathilde Munoz",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matthew-backus",
+    "name": "Matthew Backus",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-jansson",
+    "name": "Michael Jansson",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nano-barahona",
+    "name": "Nano Barahona",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nicolas-longuet-marx",
+    "name": "Nicolas Longuet Marx",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nina-buchmann",
+    "name": "Nina Buchmann",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-patrick-kline",
+    "name": "Patrick Kline",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-pierre-olivier-gourinchas",
+    "name": "Pierre-Olivier Gourinchas",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-quitze-valenzuela-stookey",
+    "name": "Quitzé Valenzuela-Stookey",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-reed-walker",
+    "name": "Reed Walker",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shachar-kariv",
+    "name": "Shachar Kariv",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shifrah-aron-dine",
+    "name": "Shifrah Aron-Dine",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-stefano-dellavigna",
+    "name": "Stefano DellaVigna",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-supreet-kaur",
+    "name": "Supreet Kaur",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sydnee-caldwell",
+    "name": "Sydnee Caldwell",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ulrike-malmendier",
+    "name": "Ulrike Malmendier",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-vira-semenova",
+    "name": "Vira Semenova",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-wilbur-townsend",
+    "name": "Wilbur Townsend",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yuriy-gorodnichenko",
+    "name": "Yuriy Gorodnichenko",
+    "orgUnitId": "dept-berkeley-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-adrien-auclert",
+    "name": "Adrien Auclert",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-adrien-bilal",
+    "name": "Adrien Bilal",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-alessandra-voena",
+    "name": "Alessandra Voena",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-allan-hsiao",
+    "name": "Allan Hsiao",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-alvin-roth",
+    "name": "Alvin Roth",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-arun-chandrasekhar",
+    "name": "Arun G. Chandrasekhar",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-douglas-bernheim",
+    "name": "B. Douglas Bernheim",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benny-kleinman",
+    "name": "Benny Kleinman",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-caroline-hoxby",
+    "name": "Caroline Hoxby",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-frank-wolak",
+    "name": "Frank Wolak",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-frank-yang",
+    "name": "Frank Yang",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-guido-imbens",
+    "name": "Guido W. Imbens",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-han-hong",
+    "name": "Han Hong",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ilya-segal",
+    "name": "Ilya Segal",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-isaac-sorkin",
+    "name": "Isaac Sorkin",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jiafeng-chen",
+    "name": "Jiafeng Chen",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-levin",
+    "name": "Jonathan Levin",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jose-ignacio-cuesta",
+    "name": "Jose Ignacio Cuesta",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kyle-bagwell",
+    "name": "Kyle Bagwell",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-liran-einav",
+    "name": "Liran Einav",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-luigi-bocola",
+    "name": "Luigi Bocola",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-luigi-pistaferri",
+    "name": "Luigi Pistaferri",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lukas-althoff",
+    "name": "Lukas Althoff",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-marcella-alsan",
+    "name": "Marcella Alsan",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mark-duggan",
+    "name": "Mark Duggan",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-martin-schneider",
+    "name": "Martin K. Schneider",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matthew-gentzkow",
+    "name": "Matthew Gentzkow",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matthew-jackson",
+    "name": "Matthew O. Jackson",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-melanie-morten",
+    "name": "Melanie Morten",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-boskin",
+    "name": "Michael J. Boskin",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-monika-piazzesi",
+    "name": "Monika Piazzesi",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-muriel-niederle",
+    "name": "Muriel Niederle",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-neale-mahoney",
+    "name": "Neale Mahoney",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nicholas-bloom",
+    "name": "Nicholas A. Bloom",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-patrick-kehoe",
+    "name": "Patrick Kehoe",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-paul-milgrom",
+    "name": "Paul R. Milgrom",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-pete-klenow",
+    "name": "Pete Klenow",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-petra-persson",
+    "name": "Petra Persson",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ran-abramitzky",
+    "name": "Ran Abramitzky",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ravi-jagadeesan",
+    "name": "Ravi Jagadeesan",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-roberto-corrao",
+    "name": "Roberto Corrao",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-stephen-redding",
+    "name": "Stephen Redding",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-thomas-macurdy",
+    "name": "Thomas E. MaCurdy",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-tishara-garg",
+    "name": "Tishara Garg",
+    "orgUnitId": "dept-stanford-econ",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-abhishek-nagaraj",
+    "name": "Abhishek Nagaraj",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-adair-morse",
+    "name": "Adair Morse",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-alexandra-figueroa",
+    "name": "Alexandra Figueroa",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-alexandre-mas",
+    "name": "Alexandre Mas",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ali-kakhbod",
+    "name": "Ali Kakhbod",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ambar-la-forgia",
+    "name": "Ambar La Forgia",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-amir-kermani",
+    "name": "Amir Kermani",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-anastassia-fedyk",
+    "name": "Anastassia Fedyk",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-andrew-rose",
+    "name": "Andrew K. Rose",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ann-harrison",
+    "name": "Ann E. Harrison",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-antoine-levy",
+    "name": "Antoine Levy",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-aruna-ranganathan",
+    "name": "Aruna Ranganathan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kelsey-jack",
+    "name": "B. Kelsey Jack",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-barry-staw",
+    "name": "Barry M. Staw",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-bihai-gao",
+    "name": "Bihai Gao",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-biwen-zhang",
+    "name": "Biwen Zhang",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-cailin-ryan-slattery",
+    "name": "Cailin Ryan Slattery",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-cameron-anderson",
+    "name": "Cameron Anderson",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-candace-yano",
+    "name": "Candace A. Yano",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-canishk-naik",
+    "name": "Canishk Naik",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-carl-shapiro",
+    "name": "Carl Shapiro",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-celia-gaertig",
+    "name": "Celia Gaertig",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christine-rosen",
+    "name": "Christine M. Rosen",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christine-parlour",
+    "name": "Christine Parlour",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-clayton-critcher",
+    "name": "Clayton R. Critcher",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-conrad-miller",
+    "name": "Conrad Miller",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-dana-carney",
+    "name": "Dana R. Carney",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-aaker",
+    "name": "David A. Aaker",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-mowery",
+    "name": "David C. Mowery",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-chan",
+    "name": "David Chan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-pyle",
+    "name": "David H. Pyle",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-levine",
+    "name": "David I. Levine",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-teece",
+    "name": "David J. Teece",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-vogel",
+    "name": "David J. Vogel",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-dmitry-livdan",
+    "name": "Dmitry Livdan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-don-moore",
+    "name": "Don A. Moore",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-drew-jacoby-senghor",
+    "name": "Drew Jacoby-Senghor",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-eben-lazarus",
+    "name": "Eben Lazarus",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-edwin-epstein",
+    "name": "Edwin M. Epstein",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ellen-evers",
+    "name": "Ellen Evers",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-erica-bailey",
+    "name": "Erica R. Bailey",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ernesto-dal-bo",
+    "name": "Ernesto Dal Bó",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-francesco-trebbi",
+    "name": "Francesco Trebbi",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ganesh-iyer",
+    "name": "Ganesh Iyer",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-guo-xu",
+    "name": "Guo Xu",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-gustavo-manso",
+    "name": "Gustavo Manso",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-harris-sondak",
+    "name": "Harris Sondak",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-hayne-leland",
+    "name": "Hayne E. Leland",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-heather-haveman",
+    "name": "Heather Haveman",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-henry-chesbrough",
+    "name": "Henry Chesbrough",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ilan-morgenstern",
+    "name": "Ilan Morgenstern",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-miguel-villas-boas",
+    "name": "J. Miguel Villas-Boas",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-james-wilcox",
+    "name": "James A. Wilcox",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-james-lincoln",
+    "name": "James R. Lincoln",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-james-sallee",
+    "name": "James Sallee",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-janet-yellen",
+    "name": "Janet L. Yellen",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-johan-walden",
+    "name": "Johan Walden",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-john-gonzales",
+    "name": "John Gonzales",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-kolstad",
+    "name": "Jonathan Kolstad",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-leonard",
+    "name": "Jonathan S. Leonard",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-weigel",
+    "name": "Jonathan Weigel",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jose-guajardo",
+    "name": "Jose Guajardo",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-juliana-schroeder",
+    "name": "Juliana Schroeder",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-karlene-roberts",
+    "name": "Karlene H. Roberts",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kenneth-rosen",
+    "name": "Kenneth Rosen",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-laura-tyson",
+    "name": "Laura D. Tyson",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-laura-kray",
+    "name": "Laura Kray",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-laura-weiwu",
+    "name": "Laura Weiwu",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lee-fleming",
+    "name": "Lee Fleming",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-leif-nelson",
+    "name": "Leif Nelson",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lucas-davis",
+    "name": "Lucas W. Davis",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-luyi-yang",
+    "name": "Luyi Yang",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-frances-van-loo",
+    "name": "M. Frances Van Loo",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-martin-beraja",
+    "name": "Martin Beraja",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-martin-lettau",
+    "name": "Martin Lettau",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mathijs-de-vaan",
+    "name": "Mathijs De Vaan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matilde-bombardini",
+    "name": "Matilde Bombardini",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matteo-benetton",
+    "name": "Matteo Benetton",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-maximilian-auffhammer",
+    "name": "Maximilian Auffhammer",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-meredith-fowlie",
+    "name": "Meredith Fowlie",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-katz",
+    "name": "Michael Katz",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ming-hsu",
+    "name": "Ming Hsu",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nancy-wallace",
+    "name": "Nancy E. Wallace",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ned-augenblick",
+    "name": "Ned Augenblick",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nick-tsivanidis",
+    "name": "Nick Tsivanidis",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nikita-kohli",
+    "name": "Nikita Kohli",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nora-silver",
+    "name": "Nora L. Silver",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-olivia-bordeu",
+    "name": "Olivia Bordeu",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-olivia-natan",
+    "name": "Olivia Natan",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-omri-even-tov",
+    "name": "Omri Even-Tov",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-pablo-spiller",
+    "name": "Pablo T. Spiller",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-panos-patatoukas",
+    "name": "Panos N. Patatoukas",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-park-sinchaisri",
+    "name": "Park Sinchaisri",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-paul-gertler",
+    "name": "Paul J. Gertler",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-paul-jansen",
+    "name": "Paul Jansen",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-peter-maxted",
+    "name": "Peter Maxted",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-rachel-gershon",
+    "name": "Rachel Gershon",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-rashi-glazer",
+    "name": "Rashi H. Glazer",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-richard-stanton",
+    "name": "Richard H. Stanton",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-richard-lyons",
+    "name": "Richard K. Lyons",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-cole",
+    "name": "Robert E. Cole",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-harris",
+    "name": "Robert G. Harris",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-edelstein",
+    "name": "Robert H. Edelstein",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-rohan-kekre",
+    "name": "Rohan Kekre",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ross-levine",
+    "name": "Ross Levine",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-rui-de-figueiredo",
+    "name": "Rui de Figueiredo",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ryan-oprea",
+    "name": "Ryan Oprea",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sa-kiera-tiarra-jolynn-hudson",
+    "name": "Sa-kiera Tiarra Jolynn Hudson",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sameer-srivastava",
+    "name": "Sameer Srivastava",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-samuel-kapon",
+    "name": "Samuel Kapon",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sara-beckman",
+    "name": "Sara L. Beckman",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sarah-moshary",
+    "name": "Sarah Moshary",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-severin-borenstein",
+    "name": "Severin Borenstein",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shagnik-chakravarty",
+    "name": "Shagnik Chakravarty",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shawn-kim",
+    "name": "Shawn Kim",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-solene-delecourt",
+    "name": "Solène Delecourt",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-steven-huff",
+    "name": "Steven Huff",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-steven-tadelis",
+    "name": "Steven Tadelis",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sunil-dutta",
+    "name": "Sunil Dutta",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-susanne-stormer",
+    "name": "Susanne Stormer",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sytske-wijnsma",
+    "name": "Sytske Wijnsma",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-tanya-paul",
+    "name": "Tanya Paul",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-terrance-odean",
+    "name": "Terrance Odean",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-terrence-hendershott",
+    "name": "Terrence Hendershott",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-terry-marsh",
+    "name": "Terry A. Marsh",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-terry-taylor",
+    "name": "Terry Taylor",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-thomas-mertens",
+    "name": "Thomas M. Mertens",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-tim-sels",
+    "name": "Tim Sels",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-timothy-mcquade",
+    "name": "Timothy McQuade",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-toby-stuart",
+    "name": "Toby E. Stuart",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-trond-petersen",
+    "name": "Trond K. Petersen",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-valerie-zhang",
+    "name": "Valerie Zhang",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-vinod-aggarwal",
+    "name": "Vinod K Aggarwal",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-william-radaic",
+    "name": "William Radaic",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-xi-wu",
+    "name": "Xi Wu",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-xiao-jun-zhang",
+    "name": "Xiao-Jun Zhang",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yaniv-konchitchki",
+    "name": "Yaniv Konchitchki",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yuichiro-kamada",
+    "name": "Yuichiro Kamada",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yunhao-jerry-zhang",
+    "name": "Yunhao (Jerry) Zhang",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-zsolt-katona",
+    "name": "Zsolt Katona",
+    "orgUnitId": "school-berkeley-haas",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-spence",
+    "name": "A. Michael Spence",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ada-aka",
+    "name": "Ada Aka",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-adam-rosenberg",
+    "name": "Adam Rosenberg",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-aleksei-samkov",
+    "name": "Aleksei Samkov",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ali-yurukoglu",
+    "name": "Ali Yurukoglu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-alina-pfrang",
+    "name": "Alina Pfrang",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-amir-goldberg",
+    "name": "Amir Goldberg",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-amit-seru",
+    "name": "Amit Seru",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-anat-admati",
+    "name": "Anat R. Admati",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-andrew-hall",
+    "name": "Andrew B. Hall",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-andrzej-skrzypacz",
+    "name": "Andrzej Skrzypacz",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-annamaria-lusardi",
+    "name": "Annamaria Lusardi",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-anne-beyer",
+    "name": "Anne Beyer",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-arvind-krishnamurthy",
+    "name": "Arvind Krishnamurthy",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ashley-martin",
+    "name": "Ashley Martin",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-avidit-acharya",
+    "name": "Avidit Acharya",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-baba-shiv",
+    "name": "Baba Shiv",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-balaji-prabhakar",
+    "name": "Balaji Prabhakar",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-bard-harstad",
+    "name": "Bård Harstad",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benjamin-hebert",
+    "name": "Benjamin Hébert",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-benoit-monin",
+    "name": "Benoît Monin",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-brandice-canes-wrone",
+    "name": "Brandice Canes-Wrone",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-brett-gordon",
+    "name": "Brett R. Gordon",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-brian-lowery",
+    "name": "Brian S. Lowery",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-chao-qin",
+    "name": "Chao Qin",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-charles-reilly",
+    "name": "Charles A. O’Reilly",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-charles-jones",
+    "name": "Charles I. Jones",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-charles-lee",
+    "name": "Charles M. C. Lee",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christopher-armstrong",
+    "name": "Christopher S. Armstrong",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christopher-tonetti",
+    "name": "Christopher Tonetti",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-claudia-allende-santa-cruz",
+    "name": "Claudia Allende Santa Cruz",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-clemens-graf-von-luckner",
+    "name": "Clemens Graf von Luckner",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-condoleezza-rice",
+    "name": "Condoleezza Rice",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-dale-miller",
+    "name": "Dale T. Miller",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-dan-iancu",
+    "name": "Dan A. Iancu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-daniel-mcfarland",
+    "name": "Daniel A. McFarland",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-daniel-kessler",
+    "name": "Daniel P. Kessler",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-daniela-saban",
+    "name": "Daniela Saban",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-david-melnikoff",
+    "name": "David Melnikoff",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-deborah-gruenfeld",
+    "name": "Deborah H. Gruenfeld",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-douglas-guilbeault",
+    "name": "Douglas R. Guilbeault",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ed-dehaan",
+    "name": "Ed deHaan",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ellie-tyger",
+    "name": "Ellie Tyger",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-eric-bettinger",
+    "name": "Eric Bettinger",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-erica-plambeck",
+    "name": "Erica Plambeck",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-erik-brynjolfsson",
+    "name": "Erik Brynjolfsson",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-fabian-nagel",
+    "name": "Fabian Nagel",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-fabian-tschofenig",
+    "name": "Fabian Tschofenig",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-fei-fei-li",
+    "name": "Fei-Fei Li",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-francis-flynn",
+    "name": "Francis J. Flynn",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-garth-saloner",
+    "name": "Garth Saloner",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-geoffrey-lawrence-cohen",
+    "name": "Geoffrey Lawrence Cohen",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-george-foster",
+    "name": "George Foster",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-giorgio-farace",
+    "name": "Giorgio Farace",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-glenn-carroll",
+    "name": "Glenn R. Carroll",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-greg-buchak",
+    "name": "Greg Buchak",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-gregory-martin",
+    "name": "Gregory J. Martin",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-haim-mendelson",
+    "name": "Haim Mendelson",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-hakan-ozyilmaz",
+    "name": "Hakan Ozyilmaz",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-hanno-lustig",
+    "name": "Hanno Lustig",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-hayagreeva-rao",
+    "name": "Hayagreeva Rao",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-helena-miton",
+    "name": "Helena Miton",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-huan-wang",
+    "name": "Huan Wang",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ilya-strebulaev",
+    "name": "Ilya A. Strebulaev",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ivan-marinovic",
+    "name": "Iván Marinovic",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-james-paron",
+    "name": "James D. Paron",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-janet-xu",
+    "name": "Janet Xu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jann-spiess",
+    "name": "Jann Spiess",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jeffrey-pfeffer",
+    "name": "Jeffrey Pfeffer",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jeffrey-zwiebel",
+    "name": "Jeffrey Zwiebel",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jennifer-aaker",
+    "name": "Jennifer Aaker",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jennifer-eberhardt",
+    "name": "Jennifer Eberhardt",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jeremy-bulow",
+    "name": "Jeremy I. Bulow",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jesper-rensen",
+    "name": "Jesper B. Sørensen",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jinhwan-kim",
+    "name": "Jinhwan Kim",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-john-kepler",
+    "name": "John D. Kepler",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-john-cochrane",
+    "name": "John H. Cochrane",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-berk",
+    "name": "Jonathan B. Berk",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jonathan-levav",
+    "name": "Jonathan Levav",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jose-ramon-enriquez",
+    "name": "José Ramón Enríquez",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-joseph-piotroski",
+    "name": "Joseph D. Piotroski",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-joseph-desimone",
+    "name": "Joseph DeSimone",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-joshua-rauh",
+    "name": "Joshua D. Rauh",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-juan-carlos-suarez-serrato",
+    "name": "Juan Carlos Suárez Serrato",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-juliane-begenau",
+    "name": "Juliane Begenau",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-julien-clement",
+    "name": "Julien Clement",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-jung-ho-choi",
+    "name": "Jung Ho Choi",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kamessi-zhao",
+    "name": "Kamessi Zhao",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-katherine-casey",
+    "name": "Katherine Casey",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ken-shotts",
+    "name": "Ken Shotts",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kevin-schulman",
+    "name": "Kevin A. Schulman",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kevin-smith",
+    "name": "Kevin Smith",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kostas-bimpikis",
+    "name": "Kostas Bimpikis",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kuang-xu",
+    "name": "Kuang Xu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-kwabena-baah-donkor",
+    "name": "Kwabena Baah Donkor",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lanier-benkard",
+    "name": "Lanier Benkard",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lihua-lei",
+    "name": "Lihua Lei",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-lin-zang",
+    "name": "Lin Zang",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-linh-vu",
+    "name": "Linh Vu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-madalina-vlasceanu",
+    "name": "Madalina Vlasceanu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-manon-francois",
+    "name": "Manon Francois",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-matteo-maggiori",
+    "name": "Matteo Maggiori",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-maureen-mcnichols",
+    "name": "Maureen McNichols",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-blank",
+    "name": "Michael Blank",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michael-ostrovsky",
+    "name": "Michael Ostrovsky",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-michele-gelfand",
+    "name": "Michele J. Gelfand",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-modibo-khane-camara",
+    "name": "Modibo Khane Camara",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mohammad-akbarpour",
+    "name": "Mohammad Akbarpour",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mohammad-mehrabi",
+    "name": "Mohammad Mehrabi",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-mohsen-bayati",
+    "name": "Mohsen Bayati",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-navdeep-sahni",
+    "name": "Navdeep S. Sahni",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-naz-koont",
+    "name": "Naz Koont",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-neil-malhotra",
+    "name": "Neil Malhotra",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-nir-halevy",
+    "name": "Nir Halevy",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-omer-karaduman",
+    "name": "Ömer Karaduman",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-paul-oyer",
+    "name": "Paul Oyer",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-paulo-somaini",
+    "name": "Paulo Somaini",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-peter-demarzo",
+    "name": "Peter M. DeMarzo",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-rebecca-lester",
+    "name": "Rebecca Lester",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robb-willer",
+    "name": "Robb Willer",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-burgelman",
+    "name": "Robert A. Burgelman",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-joss",
+    "name": "Robert L. Joss",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-robert-bartlett",
+    "name": "Robert P. Bartlett",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-ron-kasznik",
+    "name": "Ron Kasznik",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-christian-wheeler",
+    "name": "S. Christian Wheeler",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-samuel-goldberg",
+    "name": "Samuel Goldberg",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sara-constantino",
+    "name": "Sara Constantino",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sara-singer",
+    "name": "Sara Singer",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sarah-soule",
+    "name": "Sarah A. Soule",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-saumitra-jha",
+    "name": "Saumitra Jha",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sebastian-di-tella",
+    "name": "Sebastian Di Tella",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shelley-correll",
+    "name": "Shelley J. Correll",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-shoshana-vasserman",
+    "name": "Shoshana Vasserman",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-sridhar-narayanan",
+    "name": "Sridhar Narayanan",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-stefan-wager",
+    "name": "Stefan Wager",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-stefanos-zenios",
+    "name": "Stefanos Zenios",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-steven-callander",
+    "name": "Steven Callander",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-steven-grenadier",
+    "name": "Steven Grenadier",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-susan-athey",
+    "name": "Susan Athey",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-suzie-noh",
+    "name": "Suzie Noh",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-szu-chi-huang",
+    "name": "Szu-chi Huang",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-takuo-sugaya",
+    "name": "Takuo Sugaya",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-tim-de-silva",
+    "name": "Tim de Silva",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-vikrant-vig",
+    "name": "Vikrant Vig",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-walter-powell",
+    "name": "Walter W. Powell",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-weijie-zhong",
+    "name": "Weijie Zhong",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-wesley-hartmann",
+    "name": "Wesley R. Hartmann",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-william-barnett",
+    "name": "William P. Barnett",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-woojin-kim",
+    "name": "Woojin Kim",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yewon-kim",
+    "name": "Yewon Kim",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yossi-feinberg",
+    "name": "Yossi Feinberg",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-youngjoo-jung",
+    "name": "Youngjoo Jung",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yu-ding",
+    "name": "Yu Ding",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yue-hu",
+    "name": "Yue Hu",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yuliy-sannikov",
+    "name": "Yuliy Sannikov",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-yuyan-wang",
+    "name": "Yuyan Wang",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-zakary-tormala",
+    "name": "Zakary Tormala",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-zhenghao-zeng",
+    "name": "Zhenghao Zeng",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  },
+  {
+    "personId": "person-zhiguo-he",
+    "name": "Zhiguo He",
+    "orgUnitId": "school-stanford-gsb",
+    "status": "not_found",
+    "reason": "openalex_skipped",
+    "candidates": []
+  }
+]

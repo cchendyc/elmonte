@@ -1,0 +1,17 @@
+# Render Blueprint — API only. Frontend deploys to GitHub Pages.
+# Dashboard: New → Blueprint → connect this repo.
+services:
+  - type: web
+    name: elmonte-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+        # Comma-separated browser origins, e.g.:
+        # https://YOUR_USER.github.io,https://YOUR_USER.github.io/elmonte
