@@ -32,6 +32,13 @@ const httpLink = new HttpLink({
 
 const cache = new InMemoryCache({
   typePolicies: {
+    Query: {
+      fields: {
+        search: {
+          keyArgs: ["q", "limit"],
+        },
+      },
+    },
     HopNode: { keyFields: false },
     HopLink: { keyFields: false },
     PagePerson: { keyFields: false },

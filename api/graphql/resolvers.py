@@ -1058,21 +1058,34 @@ def resolve_search(_obj, info, q: str, limit: int = 10) -> dict[str, Any]:
               p.middlename,
               p.lastname,
               pa.title,
-              pa.organization_id,
+              o.name AS institution_name,
               GREATEST(
                 similarity(p.firstname, :q),
                 similarity(p.lastname, :q),
-                similarity(coalesce(p.firstname,'') || ' ' || coalesce(p.lastname,''), :q)
+                similarity(coalesce(p.firstname,'') || ' ' || coalesce(p.lastname,''), :q),
+                coalesce((
+                  SELECT max(similarity(a.alias, :q))
+                  FROM person_aliases a
+                  WHERE a.person_id = p.id
+                ), 0)
               ) AS score
             FROM people p
             LEFT JOIN person_anchor pa
               ON pa.person_id = p.id
              AND pa.validity @> :as_of
              AND pa.is_primary
+            LEFT JOIN organizations o
+              ON o.id = pa.organization_id
             WHERE
                  p.firstname % :q
               OR p.lastname  % :q
               OR (coalesce(p.firstname,'') || ' ' || coalesce(p.lastname,'')) % :q
+              OR EXISTS (
+                SELECT 1
+                FROM person_aliases a
+                WHERE a.person_id = p.id
+                  AND a.alias % :q
+              )
             ORDER BY score DESC
             LIMIT :lim
             """
@@ -1080,22 +1093,15 @@ def resolve_search(_obj, info, q: str, limit: int = 10) -> dict[str, Any]:
         {"q": query_text, "as_of": as_of, "lim": limit},
     ).mappings().all()
 
-    people: list[dict[str, Any]] = []
-    for row in person_rows:
-        inst_name = None
-        if row["organization_id"]:
-            inst_name = session.execute(
-                text("SELECT name FROM organizations WHERE id = :oid"),
-                {"oid": row["organization_id"]},
-            ).scalar_one_or_none()
-        people.append(
-            {
-                "id": encode("person", row["id"]),
-                "label": _full_name(row["firstname"], row["middlename"], row["lastname"]),
-                "role": row["title"],
-                "institution": inst_name,
-            }
-        )
+    people = [
+        {
+            "id": encode("person", row["id"]),
+            "label": _full_name(row["firstname"], row["middlename"], row["lastname"]),
+            "role": row["title"],
+            "institution": row["institution_name"],
+        }
+        for row in person_rows
+    ]
 
     org_rows = session.execute(
         text(

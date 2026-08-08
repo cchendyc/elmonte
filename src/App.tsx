@@ -74,14 +74,22 @@ function AppHeader() {
   const showDirectorySearch = location.pathname === "/";
   const isDataPage = location.pathname === "/data";
 
-  const { data } = useQuery<SearchData, SearchVars>(SEARCH, {
+  const { data, loading, error } = useQuery<SearchData, SearchVars>(SEARCH, {
     variables: { q: debounced, limit: 10 },
     skip: debounced.length < 1,
-    fetchPolicy: "cache-first",
+    fetchPolicy: "network-only",
   });
 
   const peopleMatches = data?.search.people ?? [];
   const orgMatches = data?.search.orgs ?? [];
+  const showSearchPanel = debounced.length > 0;
+  const isSearching = showSearchPanel && loading && !data;
+  const showEmptyResults =
+    showSearchPanel &&
+    !loading &&
+    !error &&
+    peopleMatches.length === 0 &&
+    orgMatches.length === 0;
 
   function focusResult(id: string) {
     setSearchParams({ focus: id });
@@ -122,7 +130,7 @@ function AppHeader() {
 
       {showDirectorySearch && (
         <div className="site-header__center" data-tour="search">
-          <div className="site-header__search org-chart-search">
+          <div className="site-header__search">
             <label className="hero-search__field">
               <span className="sr-only">
                 Search people and organization units
@@ -157,8 +165,16 @@ function AppHeader() {
               )}
             </label>
 
-            {debounced && (
+            {showSearchPanel && (
               <div className="search-results" role="listbox">
+                {isSearching && (
+                  <p className="search-results__status">Searching…</p>
+                )}
+                {error && (
+                  <p className="search-results__status search-results__status--error">
+                    Search is unavailable right now. Check that the API is running.
+                  </p>
+                )}
                 {peopleMatches.length > 0 && (
                   <p className="search-results__label">People</p>
                 )}
@@ -204,7 +220,7 @@ function AppHeader() {
                     </span>
                   </button>
                 ))}
-                {peopleMatches.length === 0 && orgMatches.length === 0 && (
+                {showEmptyResults && (
                   <p className="search-results__empty">No matching records</p>
                 )}
               </div>

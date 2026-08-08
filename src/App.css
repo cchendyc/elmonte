@@ -140,31 +140,37 @@ button {
   top: 0;
   z-index: 50;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "brand search nav";
   align-items: center;
-  gap: 20px;
+  gap: 16px 20px;
   min-height: var(--header-height);
   padding: 0 max(20px, calc((100vw - 1400px) / 2));
   border-bottom: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
+  overflow: visible;
 }
 
 .site-header__start {
   display: flex;
   align-items: center;
+  grid-area: brand;
 }
 
 .site-header__center {
   display: flex;
   justify-content: center;
   min-width: 0;
+  grid-area: search;
+  overflow: visible;
 }
 
 .site-header__search {
-  width: 100%;
-  max-width: 480px;
+  position: relative;
+  z-index: 2;
+  width: min(100%, 520px);
 }
 
 .site-header__search .hero-search__field {
@@ -172,7 +178,7 @@ button {
   padding: 0 12px 0 14px;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
-  border-color: transparent;
+  border: 1px solid transparent;
   box-shadow: none;
 }
 
@@ -186,6 +192,13 @@ button {
 .site-header__search .hero-search__field input {
   padding: 9px 0;
   font-size: 0.875rem;
+}
+
+.site-header__search .search-results {
+  top: calc(100% + 8px);
+  z-index: 3;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
 }
 
 .site-brand {
@@ -238,6 +251,8 @@ button {
   gap: 8px;
   color: var(--ink-muted);
   font-size: 0.8125rem;
+  grid-area: nav;
+  justify-self: end;
 }
 
 .site-header__guide {
@@ -517,6 +532,16 @@ button {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.search-results__status {
+  margin: 6px 10px;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+.search-results__status--error {
+  color: #c2410c;
 }
 
 .search-results__empty {
@@ -2524,11 +2549,7 @@ button {
 
 .org-chart-search {
   position: relative;
-  width: min(420px, 38vw);
-}
-
-.site-header .site-header__search {
-  width: auto;
+  width: min(420px, 100%);
 }
 
 .org-chart-search .hero-search__field {
@@ -2638,6 +2659,10 @@ button {
 
 .canvas-split--profile-open {
   grid-template-columns: minmax(0, 2fr) minmax(260px, 1.15fr) minmax(280px, 340px);
+}
+
+.canvas-split--profile-open .canvas-split__pane--scatter {
+  border-right: 1px solid var(--line);
 }
 
 .canvas-split__pane {
@@ -3187,25 +3212,27 @@ button {
    Responsive header
 --------------------------------------------------------------------------- */
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .site-header {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
-    gap: 12px;
+    grid-template-areas:
+      "brand nav"
+      "search search";
+    gap: 12px 16px;
     padding: 12px 16px;
   }
 
   .site-header__center {
-    grid-column: 1 / -1;
-    order: 3;
+    justify-content: stretch;
   }
 
   .site-header__search {
-    max-width: none;
+    width: 100%;
   }
 
   .site-header__nav {
-    margin-left: auto;
+    margin-left: 0;
   }
 
   .status-pill__label {

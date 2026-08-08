@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy.orm import Session
@@ -81,5 +82,7 @@ async def graphql_endpoint(
     except ClientDisconnect:
         return Response(status_code=499)
 
-    success, result = execute(payload, db)
+    # Resolvers are sync SQLAlchemy — run off the event loop so slow searches
+    # don't block health checks and other in-flight requests.
+    success, result = await run_in_threadpool(execute, payload, db)
     return JSONResponse(result, status_code=200 if success else 400)
