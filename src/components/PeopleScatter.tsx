@@ -452,7 +452,7 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
       )}
 
       <div className="people-scatter__status">
-        {loading && "loading graph…"}
+        {loading && (import.meta.env.VITE_API_URL ? "connecting to API…" : "loading graph…")}
         {error && (
           <span className="people-scatter__error">
             {"projection failed: " + error.message}

@@ -24,10 +24,32 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 const apiUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
 const graphqlUri = apiUrl ? `${apiUrl}/graphql` : "/api/graphql";
 
+async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const attempts = apiUrl ? 4 : 1;
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(input, init);
+      if (res.ok || res.status < 500) return res;
+      lastError = new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      lastError = err;
+    }
+    if (i < attempts - 1) {
+      await new Promise((r) => setTimeout(r, 2500 * (i + 1)));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Failed to fetch");
+}
+
 const httpLink = new HttpLink({
   uri: graphqlUri,
   // Cross-origin when VITE_API_URL points at Render; same-origin in local dev.
   credentials: apiUrl ? "omit" : "same-origin",
+  fetch: fetchWithRetry,
 });
 
 const cache = new InMemoryCache({
