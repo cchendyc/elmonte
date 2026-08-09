@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 .env
+.env.*
+!.env.example
 .venv
 dist-ssr
 *.local
@@ -25,3 +27,14 @@ data/ingest/raw/*
 *.njsproj
 *.sln
 *.sw?
+
+# SDD plan workspaces
+.superpowers/
+
+# Playwright MCP browser session data
+.playwright-mcp/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

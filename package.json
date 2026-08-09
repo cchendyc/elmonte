@@ -4,41 +4,24 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --names 'api,web' --prefix-colors 'cyan,magenta' 'npm:dev:api' 'npm:dev:web'",
-    "dev:web": "vite",
-    "dev:api": ".venv/bin/uvicorn api.main:app --reload --port 8000",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "test": "vitest run",
-    "preview": "vite preview",
-    "db:ping": "bash scripts/db/ping.sh",
-    "db:setup": "bash scripts/db/setup.sh",
-    "db:schema": "SKIP_SEED=1 bash scripts/db/setup.sh",
-    "db:migrate": ".venv/bin/alembic upgrade head",
-    "db:migrate:down": ".venv/bin/alembic downgrade -1",
-    "db:migrate:status": ".venv/bin/alembic current",
-    "db:revision": ".venv/bin/alembic revision --autogenerate -m"
-  },
-  "dependencies": {
-    "@apollo/client": "^4.2.10",
-    "@xyflow/react": "^12.11.2",
-    "dagre": "^0.8.5",
-    "graphql": "^16.14.2",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.2",
-    "tslib": "^2.8.1"
+    "dev": "concurrently --names 'web,api' --prefix-colors 'cyan,magenta' 'npm --prefix frontend run dev' 'python3 -m uvicorn api.main:app --app-dir backend --port 8000 --reload --reload-dir backend'",
+    "dev:web": "npm --prefix frontend run dev",
+    "dev:api": "python3 -m uvicorn api.main:app --app-dir backend --port 8000 --reload --reload-dir backend",
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend test && python3 -m pytest",
+    "test:web": "npm --prefix frontend test",
+    "test:api": "python3 -m pytest",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview",
+    "db:ping": "bash backend/scripts/db/ping.sh",
+    "db:setup": "bash backend/scripts/db/setup.sh",
+    "db:schema": "SKIP_SEED=1 bash backend/scripts/db/setup.sh",
+    "db:migrate": "cd backend && python3 -m alembic upgrade head",
+    "db:migrate:down": "cd backend && python3 -m alembic downgrade -1",
+    "db:migrate:status": "cd backend && python3 -m alembic current",
+    "db:revision": "cd backend && python3 -m alembic revision --autogenerate -m"
   },
   "devDependencies": {
-    "@types/dagre": "^0.7.54",
-    "@types/node": "^24.13.2",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "concurrently": "^10.0.4",
-    "oxlint": "^1.71.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.1.1",
-    "vitest": "^4.1.10"
+    "concurrently": "^10.0.4"
   }
 }

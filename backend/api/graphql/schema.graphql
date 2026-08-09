@@ -1,0 +1,320 @@
+"""ISO-8601 date (YYYY-MM-DD)."""
+scalar Date
+
+enum NodeKind {
+  person
+  org
+}
+
+"""
+Directed relation between two nodes on the client-side canvas. Only
+`placement` and `org_parent` are rendered on the org chart; advisor and
+coauthor relations are available in the profile panel instead.
+"""
+enum Relation {
+  report
+  placement
+  org_parent
+  coauthor
+}
+
+type HopNode {
+  """Prefixed public id: `p:123` for a person, `o:45` for an org."""
+  id: ID!
+  kind: NodeKind!
+  label: String!
+  sublabel: String
+  """The person's home institution — used for the ghost stub above cross-institution coauthors."""
+  institution: String
+  orgKind: String
+  rank: String
+  """
+  True when this node arrived only because someone else's expansion needed
+  a landing point (e.g. coauthor from another institution). Stubs render
+  dotted and are not expanded automatically.
+  """
+  stub: Boolean!
+  """
+  When the person left the school's chart roster (chart-anchor affiliation ended).
+  Null while still listed on the directory. Research activity continues via
+  publications — use `lastPublicationYear` for year-scoped map views, not this.
+  """
+  retiredAt: Date
+}
+
+type HopLink {
+  source: ID!
+  target: ID!
+  relation: Relation!
+  weight: Int
+  label: String
+}
+
+type GroupSummary {
+  key: String!
+  label: String!
+  count: Int!
+}
+
+type PagePerson {
+  id: ID!
+  label: String!
+  sublabel: String
+  rank: String
+}
+
+type PeoplePage {
+  ownerId: ID!
+  groupKey: String!
+  """
+  Offset AFTER the returned items — pass this back as `offset` to fetch the
+  next slice. `offset >= total` means the roster is fully loaded.
+  """
+  offset: Int!
+  total: Int!
+  items: [PagePerson!]!
+}
+
+type HopResponse {
+  focusId: ID!
+  nodes: [HopNode!]!
+  links: [HopLink!]!
+  """Group summaries when the focus has a large summarised roster."""
+  groups: [GroupSummary!]
+  """First page of the primary group, pre-loaded to save a round trip."""
+  page: PeoplePage
+}
+
+type SearchPersonHit {
+  id: ID!
+  label: String!
+  role: String
+  institution: String
+}
+
+type SearchOrgHit {
+  id: ID!
+  label: String!
+  orgKind: String
+}
+
+type SearchResults {
+  people: [SearchPersonHit!]!
+  orgs: [SearchOrgHit!]!
+}
+
+"""Lightweight org row for the top-down investigation trace."""
+type OrgUnit {
+  id: ID!
+  label: String!
+  orgKind: String!
+  sublabel: String
+}
+
+type ProjectionPoint {
+  id: ID!
+  label: String!
+  x: Float!
+  y: Float!
+  """Institution the person is anchored to."""
+  institution: String
+  """Anchor org id — used to cross-highlight org branches in the tree."""
+  institutionId: ID
+  """Coarse seniority rank."""
+  rank: String
+  """Visual prominence in [0, 1] — citations, publications, rank, network weight."""
+  impact: Float!
+  """Cluster this point belongs to in the active view (0-based)."""
+  clusterId: Int
+  """Human-readable cluster label (e.g. "Macroeconomics · 2")."""
+  clusterLabel: String
+  """When the person left the school's chart roster."""
+  retiredAt: Date
+  """Most recent publication year linked to this person, if any."""
+  lastPublicationYear: Int
+}
+
+type ProjectionCluster {
+  id: Int!
+  label: String!
+  fieldName: String
+  memberCount: Int!
+  cx: Float!
+  cy: Float!
+  colorSlot: Int!
+}
+
+type ProjectionClusterEdge {
+  sourceCluster: Int!
+  targetCluster: Int!
+  """Sum of cross-cluster coauthor weight (normalized)."""
+  collaborationWeight: Float
+  """Cosine similarity between cluster topic centroids."""
+  topicWeight: Float
+}
+
+type Projection {
+  runId: ID!
+  algorithm: String!
+  view: String!
+  pointCount: Int!
+  points: [ProjectionPoint!]!
+  clusters: [ProjectionCluster!]!
+  edges: [ProjectionClusterEdge!]!
+}
+
+"""Coauthorship tie from a focused person to someone on the current map."""
+type CoauthorTie {
+  personId: ID!
+  paperCount: Int!
+}
+
+type CareerEntry {
+  title: String
+  organization: String!
+  affiliationKind: String!
+  positionRank: String
+  isPrimary: Boolean!
+  startsAt: Date
+  endsAt: Date
+}
+
+type PersonPublication {
+  id: ID!
+  title: String!
+  year: Int!
+  citedByCount: Int
+  authorPosition: Int!
+}
+
+type ClosestPerson {
+  id: ID!
+  label: String!
+  role: String
+  institution: String
+  """`advisor`, `advisee`, `coauthor`, or `colleague`."""
+  relation: String!
+  detail: String
+}
+
+type PersonProfile {
+  id: ID!
+  label: String!
+  role: String
+  institution: String
+  biography: String
+  homepageUrl: String
+  cvUrl: String
+  orcid: String
+  careerTimeline: [CareerEntry!]!
+  publications: [PersonPublication!]!
+  closestPeople: [ClosestPerson!]!
+}
+
+"""One alter in the ego-centric perspective of a focused person."""
+type PerspectiveAlter {
+  personId: ID!
+  label: String!
+  institution: String
+  rank: String
+  """Asymmetric importance to the focused person: papers-with-P / papers-of-P, in [0,1]."""
+  importance: Float!
+  """Alter-alter community group id (0-based) — used for the angular wedge."""
+  group: Int!
+  """1 = direct coauthor/advisor, 2 = shared-coauthor only."""
+  hop: Int!
+  paperCount: Int
+  """`coauthor`, `advisor`, or `advisee`."""
+  relation: String
+}
+
+type Perspective {
+  focusId: ID!
+  alterCount: Int!
+  maxPaperCount: Int!
+  alters: [PerspectiveAlter!]!
+}
+
+"""GDPR Art. 20 portability export — all data held about a person."""
+type PersonExport {
+  id: ID!
+  label: String!
+  firstname: String
+  middlename: String
+  lastname: String
+  biography: String
+  homepageUrl: String
+  cvUrl: String
+  """Current primary role / title, e.g. "Full Professor"."""
+  role: String
+  """Current institution name."""
+  institution: String
+  aliases: [String!]!
+  externalIdentifiers: [ExportIdentifier!]!
+  careerTimeline: [CareerEntry!]!
+  publications: [PersonPublication!]!
+  closestPeople: [ClosestPerson!]!
+  personTopics: [ExportTopic!]!
+  personConcepts: [ExportConcept!]!
+}
+
+type ExportIdentifier {
+  provider: String!
+  externalId: String!
+}
+
+type ExportTopic {
+  displayName: String!
+  score: Float!
+  worksCount: Int!
+}
+
+type ExportConcept {
+  displayName: String!
+  score: Float!
+  rank: Int!
+}
+
+type Query {
+  """Full profile for the person detail sidebar."""
+  person(id: ID!, on: Date): PersonProfile
+
+  """1-hop neighbourhood around a person or org node."""
+  expand(id: ID!, on: Date): HopResponse!
+
+  """Next page of a roster. `groupKey` currently only accepts `"all"`."""
+  pages(
+    ownerId: ID!
+    groupKey: String = "all"
+    offset: Int = 0
+    limit: Int = 24
+    on: Date
+  ): PeoplePage!
+
+  """Trigram search over people (name/alias) and organizations (name/shortName)."""
+  search(q: String!, limit: Int = 10): SearchResults!
+
+  """All universities for the trace picker (Stanford, Berkeley, …)."""
+  universities(on: Date): [OrgUnit!]!
+
+  """Direct child org units under a parent (schools, departments, labs, …)."""
+  orgChildren(parentId: ID!, on: Date): [OrgUnit!]!
+
+  """
+  All points/clusters/edges in the active atlas run for the requested view
+  ("topic" or "network"). Cheap enough to send in one shot at school scale.
+  """
+  projection(view: String = "topic"): Projection!
+
+  """
+  Coauthorship edges for scatter overlay when a person is focused.
+  Only returns ties whose other endpoint is on the active projection.
+  """
+  personCoauthorTies(personId: ID!, view: String = "topic"): [CoauthorTie!]!
+
+  """Ego-centric perspective of `personId` — polar semantics (r = importance, theta = alter community)."""
+  perspective(personId: ID!): Perspective!
+
+  """GDPR Art. 20 portability: all data held about a person (full publications, topics, concepts, identifiers)."""
+  personExport(personId: ID!): PersonExport!
+}

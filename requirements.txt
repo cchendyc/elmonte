@@ -1,9 +1,0 @@
-alembic>=1.14
-ariadne>=0.24
-fastapi>=0.115
-numpy>=2.0
-psycopg[binary]>=3.2
-scipy>=1.14
-sqlalchemy>=2.0
-uvicorn[standard]>=0.32
-pacmap>=0.7
