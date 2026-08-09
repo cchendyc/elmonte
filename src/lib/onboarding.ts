@@ -29,14 +29,14 @@ export const TOUR_STEPS: TourStep[] = [
     id: "scatter",
     target: "scatter",
     title: "People map",
-    body: "Each point is a researcher, colored by institution. Pan and zoom to explore. Click any point to focus on that person.",
+    body: "Each point is a researcher. Closer points are more structurally related; color can show similarity groups or institution; larger points have more impact.",
     placement: "left",
   },
   {
     id: "org-chart",
     target: "org-chart",
     title: "Investigation trace",
-    body: "Your org chart grows as you click. Each click pulls one more hop from the database and adds it to your trace. Click the focused node again to collapse.",
+    body: "Start at a university (Stanford, Berkeley, …), then pick a school or department — Economics, Business, MCB. Keep drilling down to people and their advisees.",
     placement: "right",
   },
   {

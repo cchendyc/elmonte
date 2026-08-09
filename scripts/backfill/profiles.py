@@ -67,6 +67,10 @@ common.register_parser("economics.stanford.edu", stanford_econ.parse)
 common.register_parser("econ.berkeley.edu", berkeley_econ.parse)
 common.register_parser("haas.berkeley.edu", berkeley_haas.parse)
 common.register_parser("www.gsb.stanford.edu", stanford_gsb.parse)
+common.register_parser("economics.mit.edu", stanford_econ.parse)
+common.register_parser("egc.yale.edu", stanford_econ.parse)
+common.register_parser("economics.yale.edu", stanford_econ.parse)
+common.register_parser("economics.uchicago.edu", stanford_econ.parse)
 
 
 def _iter_targets(session: Session) -> list[tuple[str, int, int | None]]:

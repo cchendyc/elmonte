@@ -7,9 +7,9 @@ enum NodeKind {
 }
 
 """
-Directed relation between two nodes on the client-side canvas. The
-precedence order (report > placement > org_parent > coauthor) is applied
-in the frontend session reducer.
+Directed relation between two nodes on the client-side canvas. Only
+`placement` and `org_parent` are rendered on the org chart; advisor and
+coauthor relations are available in the profile panel instead.
 """
 enum Relation {
   report
@@ -34,6 +34,12 @@ type HopNode {
   dotted and are not expanded automatically.
   """
   stub: Boolean!
+  """
+  When the person left the school's chart roster (chart-anchor affiliation ended).
+  Null while still listed on the directory. Research activity continues via
+  publications — use `lastPublicationYear` for year-scoped map views, not this.
+  """
+  retiredAt: Date
 }
 
 type HopLink {
@@ -97,6 +103,14 @@ type SearchResults {
   orgs: [SearchOrgHit!]!
 }
 
+"""Lightweight org row for the top-down investigation trace."""
+type OrgUnit {
+  id: ID!
+  label: String!
+  orgKind: String!
+  sublabel: String
+}
+
 """
 One point in the people scatter — a 2D projection of a person's structural
 neighbourhood. Coordinates come from the currently-active `embedding_runs`
@@ -107,7 +121,7 @@ type ProjectionPoint {
   label: String!
   x: Float!
   y: Float!
-  """Institution the person is anchored to; drives cluster colour."""
+  """Institution the person is anchored to."""
   institution: String
   """Anchor org id — used to cross-highlight org branches in the tree."""
   institutionId: ID
@@ -115,14 +129,15 @@ type ProjectionPoint {
   rank: String
   """Visual prominence in [0, 1] — citations, publications, rank, network weight."""
   impact: Float!
-}
-
-"""An undirected tie between two projected people — drives the graph lines."""
-type ProjectionEdge {
-  sourceId: ID!
-  targetId: ID!
-  """Collaboration / adjacency strength used for line weight."""
-  weight: Float!
+  """Structural similarity group for map coloring (0-based)."""
+  similarityGroup: Int
+  """
+  When the person left the school's chart roster. Null while still on the
+  directory. Does not mean they stopped publishing.
+  """
+  retiredAt: Date
+  """Most recent publication year linked to this person, if any."""
+  lastPublicationYear: Int
 }
 
 type Projection {
@@ -130,8 +145,12 @@ type Projection {
   algorithm: String!
   pointCount: Int!
   points: [ProjectionPoint!]!
-  """Structural links between projected people (kNN-sparsified to match layout)."""
-  edges: [ProjectionEdge!]!
+}
+
+"""Coauthorship tie from a focused person to someone on the current map."""
+type CoauthorTie {
+  personId: ID!
+  paperCount: Int!
 }
 
 type CareerEntry {
@@ -169,6 +188,7 @@ type PersonProfile {
   institution: String
   biography: String
   homepageUrl: String
+  cvUrl: String
   careerTimeline: [CareerEntry!]!
   publications: [PersonPublication!]!
   closestPeople: [ClosestPerson!]!
@@ -193,10 +213,22 @@ type Query {
   """Trigram search over people (name/alias) and organizations (name/shortName)."""
   search(q: String!, limit: Int = 10): SearchResults!
 
+  """All universities for the trace picker (Stanford, Berkeley, …)."""
+  universities(on: Date): [OrgUnit!]!
+
+  """Direct child org units under a parent (schools, departments, labs, …)."""
+  orgChildren(parentId: ID!, on: Date): [OrgUnit!]!
+
   """
   All points in the current person 2D projection. Cheap enough to send in
   one shot at Berkeley-scale (~400 rows today, ~thousands at production
   scale). If we ever cross the tens of thousands, add a viewport filter.
   """
   projection: Projection!
+
+  """
+  Coauthorship edges for scatter overlay when a person is focused.
+  Only returns ties whose other endpoint is on the active projection.
+  """
+  personCoauthorTies(personId: ID!): [CoauthorTie!]!
 }

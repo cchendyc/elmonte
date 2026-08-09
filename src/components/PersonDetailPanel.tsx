@@ -6,6 +6,8 @@ import {
   type PersonVars,
   type CareerEntry,
 } from "../api/queries";
+import { ExpandableText } from "./ExpandableText";
+import { apiUrl } from "../lib/apiUrl";
 
 type Tab = "timeline" | "publications" | "people";
 
@@ -104,18 +106,35 @@ export function PersonDetailPanel({ personId, onFocusPerson, onClose }: Props) {
           </div>
 
           {profile.biography && (
-            <p className="detail-panel__lede">{profile.biography}</p>
+            <ExpandableText
+              text={profile.biography}
+              className="detail-panel__lede"
+            />
           )}
 
-          {profile.homepageUrl && (
-            <a
-              className="button-secondary detail-panel__link"
-              href={profile.homepageUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Homepage →
-            </a>
+          {(profile.homepageUrl || profile.cvUrl) && (
+            <div className="detail-panel__links">
+              {profile.homepageUrl && (
+                <a
+                  className="button-secondary detail-panel__link"
+                  href={profile.homepageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Homepage →
+                </a>
+              )}
+              {profile.cvUrl && (
+                <a
+                  className="button-secondary detail-panel__link"
+                  href={apiUrl(profile.cvUrl)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  CV →
+                </a>
+              )}
+            </div>
           )}
 
           <div className="detail-panel__tabs" role="tablist" aria-label="Profile sections">

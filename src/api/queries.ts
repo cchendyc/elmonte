@@ -42,6 +42,7 @@ export const EXPAND = gql`
         orgKind
         rank
         stub
+        retiredAt
       }
       links {
         source
@@ -80,6 +81,7 @@ export const PERSON = gql`
       institution
       biography
       homepageUrl
+      cvUrl
       careerTimeline {
         title
         organization
@@ -104,6 +106,28 @@ export const PERSON = gql`
         relation
         detail
       }
+    }
+  }
+`;
+
+export const UNIVERSITIES = gql`
+  query Universities($on: Date) {
+    universities(on: $on) {
+      id
+      label
+      orgKind
+      sublabel
+    }
+  }
+`;
+
+export const ORG_CHILDREN = gql`
+  query OrgChildren($parentId: ID!, $on: Date) {
+    orgChildren(parentId: $parentId, on: $on) {
+      id
+      label
+      orgKind
+      sublabel
     }
   }
 `;
@@ -220,6 +244,7 @@ export interface PersonProfile {
   institution: string | null;
   biography: string | null;
   homepageUrl: string | null;
+  cvUrl: string | null;
   careerTimeline: CareerEntry[];
   publications: PersonPublication[];
   closestPeople: ClosestPerson[];
@@ -231,6 +256,26 @@ export interface PersonData {
 
 export interface PersonVars {
   id: string;
+  on?: string;
+}
+
+export interface OrgUnit {
+  id: string;
+  label: string;
+  orgKind: string;
+  sublabel: string | null;
+}
+
+export interface UniversitiesData {
+  universities: OrgUnit[];
+}
+
+export interface OrgChildrenData {
+  orgChildren: OrgUnit[];
+}
+
+export interface OrgChildrenVars {
+  parentId: string;
   on?: string;
 }
 

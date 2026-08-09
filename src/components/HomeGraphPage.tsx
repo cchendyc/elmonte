@@ -1,11 +1,31 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import {
+  InvestigationTrace,
+  type CanvasViewMode,
+} from "./InvestigationTrace";
 import { OrgChart } from "./OrgChart";
 import { PeopleScatter } from "./PeopleScatter";
 import { PersonDetailPanel } from "./PersonDetailPanel";
+import { useGraphSession } from "../lib/useGraphSession";
+
+const CANVAS_VIEW_STORAGE_KEY = "elmonte-canvas-view-mode";
+const LEGACY_TRACE_VIEW_STORAGE_KEY = "elmonte-trace-view-mode";
 
 function isPersonId(id: string | null): id is string {
   return id != null && id.startsWith("p:");
+}
+
+function readViewMode(): CanvasViewMode {
+  try {
+    const stored =
+      localStorage.getItem(CANVAS_VIEW_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_TRACE_VIEW_STORAGE_KEY);
+    if (stored === "graph") return "graph";
+    return "scatter";
+  } catch {
+    return "scatter";
+  }
 }
 
 export function HomeGraphPage() {
@@ -13,6 +33,9 @@ export function HomeGraphPage() {
   const focusId = searchParams.get("focus");
   const setFocus = (id: string) => setSearchParams({ focus: id });
   const [profileOpen, setProfileOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<CanvasViewMode>(readViewMode);
+
+  const graphSession = useGraphSession(focusId ?? "", setFocus);
 
   const showProfile = isPersonId(focusId) && profileOpen;
 
@@ -24,6 +47,15 @@ export function HomeGraphPage() {
     }
   }, [focusId]);
 
+  function handleViewModeChange(mode: CanvasViewMode) {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(CANVAS_VIEW_STORAGE_KEY, mode);
+    } catch {
+      // Ignore storage failures
+    }
+  }
+
   return (
     <div
       className={`canvas-split${showProfile ? " canvas-split--profile-open" : ""}`}
@@ -32,50 +64,56 @@ export function HomeGraphPage() {
         className="canvas-split__pane canvas-split__pane--tree"
         data-tour="org-chart"
       >
-        {focusId ? (
-          <OrgChart focusId={focusId} onFocus={setFocus} minHeight="100%" />
+        <div className="investigation-panel">
+          <InvestigationTrace
+            session={graphSession.session}
+            api={graphSession}
+            onFocus={setFocus}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            error={graphSession.error}
+          />
+        </div>
+      </div>
+
+      <div
+        className="canvas-split__pane canvas-split__pane--main"
+        data-tour={viewMode === "scatter" ? "scatter" : "graph"}
+      >
+        {viewMode === "scatter" ? (
+          <PeopleScatter
+            focusId={focusId}
+            onFocus={setFocus}
+            minHeight="100%"
+          />
+        ) : focusId ? (
+          <OrgChart
+            focusId={focusId}
+            session={graphSession.session}
+            api={graphSession}
+            error={graphSession.error}
+            minHeight="100%"
+          />
         ) : (
           <div className="empty-state empty-state--canvas">
             <div className="empty-state__icon" aria-hidden="true">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.75" />
                 <path
-                  d="M4 19V5C4 4.44772 4.44772 4 5 4H19C19.5523 4 20 4.44772 20 5V19"
+                  d="M12 2V5M12 19V22M2 12H5M19 12H22M4.9 4.9L7 7M17 17L19.1 19.1M4.9 19.1L7 17M17 7L19.1 4.9"
                   stroke="currentColor"
-                  strokeWidth="1.5"
+                  strokeWidth="1.75"
                   strokeLinecap="round"
                 />
-                <path
-                  d="M4 9H20M9 4V9M15 4V9"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <circle cx="8" cy="14" r="1.5" fill="currentColor" />
-                <circle cx="12" cy="16" r="1.5" fill="currentColor" />
-                <circle cx="16" cy="13" r="1.5" fill="currentColor" />
               </svg>
             </div>
-            <h2>Start exploring</h2>
+            <h2>Relationship graph</h2>
             <p>
-              Search for a researcher or institution above, or select a point
-              on the people map. Each selection expands the relationship graph
-              from the database.
+              Pick a focus from the trace on the left, or search for a
+              researcher or institution to explore their network.
             </p>
-            <ul className="empty-state__hints">
-              <li>Use the search bar to jump to a person or org</li>
-              <li>Click nodes on the map to build your investigation</li>
-              <li>Open profiles to view career timelines and papers</li>
-            </ul>
           </div>
         )}
-      </div>
-
-      <div className="canvas-split__pane canvas-split__pane--scatter" data-tour="scatter">
-        <PeopleScatter
-          focusId={focusId}
-          onFocus={setFocus}
-          minHeight="100%"
-        />
       </div>
 
       {showProfile && (

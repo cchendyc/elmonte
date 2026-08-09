@@ -26,8 +26,8 @@ function fadeStyle(fade: number): React.CSSProperties {
  *  didn't shrink here we'd overflow and clip. */
 function nameLenTier(s: string): "s" | "l" | "xl" {
   const n = s.length;
-  if (n <= 22) return "s";
-  if (n <= 34) return "l";
+  if (n <= 18) return "s";
+  if (n <= 28) return "l";
   return "xl";
 }
 

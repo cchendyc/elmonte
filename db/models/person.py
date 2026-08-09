@@ -41,6 +41,8 @@ class Person(Base, TimestampMixin):
     lastname: Mapped[str] = mapped_column(Text, nullable=False)
     biography: Mapped[str | None] = mapped_column(Text)
     homepage_url: Mapped[str | None] = mapped_column(Text)
+    cv_url: Mapped[str | None] = mapped_column(Text)
+    cv_snapshot_id: Mapped[int | None] = mapped_column(RowId)
     claimed_status: Mapped[str] = mapped_column(
         enums.claimed_status, nullable=False, server_default=text("'unclaimed'")
     )

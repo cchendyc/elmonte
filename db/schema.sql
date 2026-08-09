@@ -167,19 +167,24 @@ CREATE TABLE people (
   lastname       TEXT NOT NULL,
   biography      TEXT,
   homepage_url   TEXT,
+  cv_url         TEXT,
+  cv_snapshot_id BIGINT,
   claimed_status claimed_status NOT NULL DEFAULT 'unclaimed',
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT people_firstname_not_blank CHECK (btrim(firstname) <> ''),
   CONSTRAINT people_lastname_not_blank CHECK (btrim(lastname) <> ''),
   CONSTRAINT people_homepage_url_scheme
-    CHECK (homepage_url IS NULL OR homepage_url ~* '^https?://')
+    CHECK (homepage_url IS NULL OR homepage_url ~* '^https?://'),
+  CONSTRAINT people_cv_url_scheme
+    CHECK (cv_url IS NULL OR cv_url ~* '^https?://')
 );
 
 CREATE TRIGGER people_set_updated_at BEFORE UPDATE ON people
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE INDEX idx_people_lastname ON people (lastname);
+CREATE INDEX idx_people_cv_snapshot ON people (cv_snapshot_id) WHERE cv_snapshot_id IS NOT NULL;
 CREATE INDEX idx_people_firstname_trgm ON people USING gin (firstname gin_trgm_ops);
 CREATE INDEX idx_people_lastname_trgm ON people USING gin (lastname gin_trgm_ops);
 
@@ -838,10 +843,11 @@ CREATE UNIQUE INDEX embedding_runs_one_active
   ON embedding_runs (is_active) WHERE is_active;
 
 CREATE TABLE person_projections_2d (
-  run_id     BIGINT NOT NULL,
-  person_id  BIGINT NOT NULL,
-  x          DOUBLE PRECISION NOT NULL,
-  y          DOUBLE PRECISION NOT NULL,
+  run_id        BIGINT NOT NULL,
+  person_id     BIGINT NOT NULL,
+  x             DOUBLE PRECISION NOT NULL,
+  y             DOUBLE PRECISION NOT NULL,
+  similarity_group  SMALLINT,
   PRIMARY KEY (run_id, person_id)
 );
 

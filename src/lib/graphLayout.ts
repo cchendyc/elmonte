@@ -24,9 +24,9 @@ import {
 // and `.graph-cohort` in App.css. Dagre reserves exactly these dimensions,
 // so if CSS ever grows the card it will overlap its siblings.
 const SIZES: Record<string, { w: number; h: number }> = {
-  person: { w: 216, h: 76 },
-  org: { w: 228, h: 84 },
-  cohort: { w: 880, h: 220 }, // grows further in sizeOf if the band is long
+  person: { w: 180, h: 68 },
+  org: { w: 192, h: 72 },
+  cohort: { w: 760, h: 220 }, // grows further in sizeOf if the band is long
   peer_more: { w: 74, h: 44 },
 };
 
@@ -72,6 +72,7 @@ export interface PersonNodeData extends Record<string, unknown> {
   onPath: boolean;
   fade: number;
   stub?: boolean;
+  retiredAt?: string | null;
   loading: boolean;
   onSelect: () => void;
 }
@@ -119,19 +120,19 @@ function sizeOf(type: NodeType, data: RFNodeData): { w: number; h: number } {
     const listH = Math.min(360, Math.max(56, rows * 44));
     const footer = d.remaining > 0 ? 46 : 0;
     const filterBar = d.ranks.length >= 2 ? 44 : 0;
-    return { w: 880, h: 64 + filterBar + listH + footer };
+    return { w: 760, h: 64 + filterBar + listH + footer };
   }
   return SIZES[type as keyof typeof SIZES] ?? SIZES.org;
 }
 
+const ORG_HIERARCHY_RELATIONS = new Set<Relation>(["placement", "org_parent"]);
+
 const RELATION_STYLE: Record<
-  Relation,
-  { stroke: string; width: number; dash?: string }
+  "placement" | "org_parent",
+  { stroke: string; width: number }
 > = {
-  report: { stroke: "#8a5a3b", width: 2 },
   placement: { stroke: "#2f6a5e", width: 2 },
   org_parent: { stroke: "#2f6a5e", width: 2 },
-  coauthor: { stroke: "#cf5a2b", width: 1.75, dash: "5 4" },
 };
 
 export interface LayoutStats {
@@ -243,6 +244,7 @@ export function layoutSession(
           onPath: (d ?? 9) <= 1,
           fade,
           stub: n.stub,
+          retiredAt: n.retiredAt,
           loading: Boolean(state.loading[n.id]),
           onSelect: () => cb.onSelect(n.id),
         },
@@ -267,6 +269,7 @@ export function layoutSession(
   }
 
   for (const l of Object.values(state.links)) {
+    if (!ORG_HIERARCHY_RELATIONS.has(l.relation)) continue;
     if (state.nodes[l.source] && state.nodes[l.target]) structural.push(l);
   }
 
@@ -393,15 +396,17 @@ export function layoutSession(
   // --- Dagre ---------------------------------------------------------------
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
-  // `nodesep` is the min horizontal gap between siblings at the same rank.
-  // Bumping to 52 leaves comfortable breathing room around the 216/228px
-  // cards even when neighbours are visually loud (bold labels, dashed
-  // borders). `edgesep` widens the gutters dagre keeps between parallel
-  // edges so the T-junction crossbar doesn't crowd sibling cards.
+  // `nodesep` / `ranksep` must clear SIZES plus a small gutter so cards and
+  // step edges never overlap. Kept tighter than before so the tree reads less
+  // skeletal while still leaving room for labels on near edges.
+  const NODESEP = 40;
+  const RANKSEP = 64;
+  // `edgesep` widens the gutters dagre keeps between parallel edges so the
+  // T-junction crossbar doesn't crowd sibling cards.
   g.setGraph({
     rankdir: "TB",
-    nodesep: 52,
-    ranksep: 108,
+    nodesep: NODESEP,
+    ranksep: RANKSEP,
     marginx: 48,
     marginy: 48,
     edgesep: 24,
@@ -420,8 +425,6 @@ export function layoutSession(
   // placement colleagues are on canvas yet, estimate the row from the anchor
   // org. Always run collision resolution — peers are not in the dagre edge
   // graph so they otherwise sit at (0,0) and overlap real nodes.
-  const NODESEP = 52;
-  const RANKSEP = 108;
   const peerEdges: Array<{ source: string; target: string }> = [];
   for (const { peerId, anchorOrgId } of peerAlign) {
     const persons = anchoredPersonsByOrg.get(anchorOrgId) ?? [];
@@ -497,7 +500,8 @@ export function layoutSession(
   // otherwise get from `smoothstep`'s per-edge rounded arcs.
   const edges: Edge[] = [];
   for (const l of structural) {
-    const style = RELATION_STYLE[l.relation];
+    const style = RELATION_STYLE[l.relation as keyof typeof RELATION_STYLE];
+    if (!style) continue;
     const near = (dist.get(l.source) ?? 9) <= 1 || (dist.get(l.target) ?? 9) <= 1;
     const stubEndpoint =
       state.nodes[l.source]?.stub || state.nodes[l.target]?.stub;
@@ -509,18 +513,9 @@ export function layoutSession(
       style: {
         stroke: style.stroke,
         strokeWidth: style.width,
-        strokeDasharray: stubEndpoint ? "4 4" : style.dash,
+        strokeDasharray: stubEndpoint ? "4 4" : undefined,
         opacity: near ? 1 : 0.4,
       },
-      label: near ? l.label : undefined,
-      labelStyle: { fill: style.stroke, fontSize: 10 },
-      labelBgStyle: { fill: "#fbf7ec", fillOpacity: 0.92 },
-      labelBgPadding: [4, 2],
-      labelBgBorderRadius: 4,
-      markerEnd:
-        l.relation === "report"
-          ? { type: "arrowclosed" as const, color: style.stroke, width: 13, height: 13 }
-          : undefined,
     } as Edge);
   }
   for (const e of groupEdges) {

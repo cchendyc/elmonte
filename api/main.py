@@ -6,26 +6,30 @@ Run in development:
 
 The Vite dev server proxies /api/* to this process (see vite.config.ts).
 
-There is exactly one data endpoint:
+Endpoints:
 
-    POST /api/graphql   — the GraphQL query endpoint (Ariadne)
-    GET  /api/graphql   — the GraphiQL explorer (dev only)
-    GET  /api/health    — liveness check
+    POST /api/graphql              — GraphQL query endpoint (Ariadne)
+    GET  /api/graphql              — GraphiQL explorer (dev only)
+    GET  /api/health               — liveness check
+    GET  /api/people/{id}/cv       — cached CV snapshot for a person
 """
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.requests import ClientDisconnect
 
 from api.deps import db_session
 from api.graphql.app import execute, render_explorer
+from api.id_codec import decode
 
 
 app = FastAPI(
@@ -60,6 +64,34 @@ app.add_middleware(
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/people/{public_id}/cv")
+def person_cv(public_id: str, db: Session = Depends(db_session)) -> FileResponse:
+    kind, row_id = decode(public_id)
+    if kind != "person":
+        raise HTTPException(status_code=404, detail="person not found")
+
+    row = db.execute(
+        text("SELECT cv_snapshot_id FROM people WHERE id = :i"),
+        {"i": row_id},
+    ).mappings().first()
+    if row is None or row["cv_snapshot_id"] is None:
+        raise HTTPException(status_code=404, detail="cv not available")
+
+    snap = db.execute(
+        text("SELECT local_path FROM source_snapshots WHERE id = :i"),
+        {"i": int(row["cv_snapshot_id"])},
+    ).mappings().first()
+    if snap is None or not snap["local_path"]:
+        raise HTTPException(status_code=404, detail="cv snapshot missing")
+
+    path = Path(snap["local_path"])
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="cv file missing")
+
+    media_type = "application/pdf" if path.suffix.lower() == ".pdf" else "text/html"
+    return FileResponse(path, media_type=media_type, filename=path.name)
 
 
 @app.get("/api/graphql", response_class=HTMLResponse)

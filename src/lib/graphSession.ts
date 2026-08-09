@@ -10,22 +10,16 @@ import type { PositionRank } from "./positionRank";
 // investigation.
 //
 // INVARIANT: at most ONE edge between any two nodes. Links are stored in a map
-// keyed by the unordered pair. When a second relationship arrives for a pair
-// that already has one, the relationships are merged — the highest-precedence
-// one wins for direction and styling, and the label summarises all of them.
-// This canonicalisation is deliberately client-side only; the DB stores every
-// underlying fact separately.
-//
-// Precedence, highest wins:
-//   report      advisor / advisee (solid, arrowed)
-//   placement   person to their anchor org (solid)
-//   org_parent  child org to parent org (solid)
-//   coauthor    cross-institution coauthorship (dotted)
+// keyed by the unordered pair. The canvas only renders org hierarchy edges
+// (placement and org_parent); advisor and coauthor relations stay in the
+// profile panel, not on the graph.
 // -----------------------------------------------------------------------------
 
 export type NodeKind = "person" | "org";
 
 export type Relation = "report" | "placement" | "org_parent" | "coauthor";
+
+const SESSION_RELATIONS = new Set<Relation>(["placement", "org_parent", "report"]);
 
 export interface HopNode {
   id: string;
@@ -41,6 +35,8 @@ export interface HopNode {
    *  they were another node's coauthor). Stubs get a dotted upstream edge to
    *  their institution and are not expanded further until clicked. */
   stub?: boolean;
+  /** When the chart-anchor affiliation ended; null while still active. */
+  retiredAt?: string | null;
 }
 
 export interface HopLink {
@@ -201,6 +197,9 @@ export type SessionAction =
    *  because of this node's expansion. Trail entries and other explicitly-
    *  expanded nodes always survive. */
   | { type: "collapse"; id: string }
+  /** Rewind the trail to `index` and select `id` there, pruning downstream
+   *  branches that are no longer reachable from the new trail. */
+  | { type: "trailSelect"; index: number; id: string }
   | { type: "reset"; keepId: string };
 
 export function emptySession(focusId: string): SessionState {
@@ -246,6 +245,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
 
       const links = { ...state.links };
       for (const l of action.links) {
+        if (!SESSION_RELATIONS.has(l.relation)) continue;
         if (!nodes[l.source] || !nodes[l.target]) continue;
         const key = linkKey(l.source, l.target);
         links[key] = mergeLink(links[key], l);
@@ -435,6 +435,84 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       };
     }
 
+    case "trailSelect": {
+      const newTrail = [...state.trail.slice(0, action.index), action.id];
+      if (newTrail.length === 0 || !state.nodes[action.id]) return state;
+
+      const anchors = new Set<string>(newTrail);
+      for (const id of newTrail) {
+        const n = state.nodes[id];
+        if (n?.expanded) anchors.add(id);
+      }
+
+      const adj = new Map<string, string[]>();
+      const addAdj = (a: string, b: string) => {
+        const list = adj.get(a);
+        if (list) list.push(b);
+        else adj.set(a, [b]);
+      };
+      for (const l of Object.values(state.links)) {
+        addAdj(l.source, l.target);
+        addAdj(l.target, l.source);
+      }
+
+      const kept = new Set<string>();
+      const queue: string[] = [];
+      for (const a of anchors) {
+        if (!state.nodes[a]) continue;
+        kept.add(a);
+        queue.push(a);
+      }
+      while (queue.length) {
+        const cur = queue.shift()!;
+        for (const nb of adj.get(cur) ?? []) {
+          if (!kept.has(nb) && state.nodes[nb]) {
+            kept.add(nb);
+            queue.push(nb);
+          }
+        }
+      }
+
+      const newNodes: Record<string, SessionNode> = {};
+      for (const [id, n] of Object.entries(state.nodes)) {
+        if (!kept.has(id)) continue;
+        newNodes[id] = n;
+      }
+
+      const newLinks: Record<string, SessionLink> = {};
+      for (const [k, l] of Object.entries(state.links)) {
+        if (!kept.has(l.source) || !kept.has(l.target)) continue;
+        newLinks[k] = l;
+      }
+
+      const newGroups = { ...state.groups };
+      for (const ownerId of Object.keys(newGroups)) {
+        if (!kept.has(ownerId)) delete newGroups[ownerId];
+      }
+
+      const newPages = { ...state.pages };
+      for (const key of Object.keys(newPages)) {
+        const [ownerId] = key.split("::");
+        if (!kept.has(ownerId)) delete newPages[key];
+      }
+
+      const newLoading = { ...state.loading };
+      for (const id of Object.keys(newLoading)) {
+        if (state.nodes[id] && !kept.has(id)) delete newLoading[id];
+      }
+
+      return {
+        ...state,
+        nodes: newNodes,
+        links: newLinks,
+        trail: newTrail,
+        focusId: action.id,
+        groups: newGroups,
+        pages: newPages,
+        loading: newLoading,
+      };
+    }
+
     case "reset":
       return emptySession(action.keepId);
 
@@ -446,6 +524,29 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
 // -----------------------------------------------------------------------------
 // Derived selectors
 // -----------------------------------------------------------------------------
+
+/** Direct neighbours of `nodeId` in the org-hierarchy canvas. */
+export function neighborIds(state: SessionState, nodeId: string): string[] {
+  const ids = new Set<string>();
+  for (const l of Object.values(state.links)) {
+    if (l.source === nodeId) ids.add(l.target);
+    if (l.target === nodeId) ids.add(l.source);
+  }
+
+  const group = state.groups[nodeId];
+  if (group?.openKey) {
+    const page = state.pages[pageKey(nodeId, group.openKey)];
+    for (const item of page?.items ?? []) ids.add(item.id);
+  }
+
+  return [...ids]
+    .filter((id) => state.nodes[id])
+    .sort((a, b) => {
+      const la = state.nodes[a]!.label;
+      const lb = state.nodes[b]!.label;
+      return la.localeCompare(lb);
+    });
+}
 
 /** BFS distance from the focus. Used to fade nodes further from attention. */
 export function distancesFrom(state: SessionState, focusId: string): Map<string, number> {

@@ -1,10 +1,5 @@
 /**
  * Typed shape and GraphQL document for the person scatter projection.
- *
- * The projection is served in one shot — at Berkeley scale (~400 points)
- * this is cheap and lets the frontend colour, filter, and pan/zoom without
- * further round trips. If we ever grow to tens of thousands of points, add
- * a viewport filter on the server and paginate.
  */
 
 import { gql } from "@apollo/client";
@@ -24,11 +19,9 @@ export const PROJECTION = gql`
         institutionId
         rank
         impact
-      }
-      edges {
-        sourceId
-        targetId
-        weight
+        similarityGroup
+        retiredAt
+        lastPublicationYear
       }
     }
   }
@@ -43,12 +36,9 @@ export interface ProjectionPoint {
   institutionId: string | null;
   rank: string | null;
   impact: number;
-}
-
-export interface ProjectionEdge {
-  sourceId: string;
-  targetId: string;
-  weight: number;
+  similarityGroup: number | null;
+  retiredAt: string | null;
+  lastPublicationYear: number | null;
 }
 
 export interface Projection {
@@ -56,7 +46,6 @@ export interface Projection {
   algorithm: string;
   pointCount: number;
   points: ProjectionPoint[];
-  edges: ProjectionEdge[];
 }
 
 export interface ProjectionData {

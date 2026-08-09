@@ -11,7 +11,7 @@ serialization; there's no separate Pydantic layer.
 from __future__ import annotations
 
 import math
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from ariadne import QueryType, ScalarType
@@ -19,16 +19,13 @@ from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session
 
 from api.id_codec import decode, encode
-from scripts.embed.build_projection import (
-    DEFAULT_KNN,
-    projection_display_edges,
-)
 from db.models import (
     Organization,
     OrgRelationship,
     Person,
     PersonRelationship,
 )
+from scripts.backfill.common import is_displayable_publication
 
 
 # ---------------------------------------------------------------------------
@@ -43,8 +40,6 @@ COLLEAGUE_LIMIT = 8
 PUBLICATION_LIMIT = 40
 EVERYONE_KEY = "all"
 EVERYONE_LABEL = "People"
-# Matches `DEFAULT_KNN` in scripts/embed/build_projection.py
-PROJECTION_EDGE_KNN = DEFAULT_KNN
 
 # Coarse seniority prior — citations dominate when bibliography data exists.
 _RANK_IMPACT: dict[str, float] = {
@@ -107,55 +102,28 @@ def _org_sublabel(kind: str, child_count: int, roster_count: int) -> str:
     return f"{kind} · " + " · ".join(parts) if parts else kind
 
 
-def _projection_graph_edges(
-    session: Session,
-    person_ids: list[int],
-    knn: int = PROJECTION_EDGE_KNN,
-) -> list[dict[str, Any]]:
-    sparse = projection_display_edges(session, person_ids, knn=knn)
-    return [
-        {
-            "sourceId": encode("person", a),
-            "targetId": encode("person", b),
-            "weight": weight,
-        }
-        for a, b, weight in sparse
-    ]
-
-
-def _structural_weights(edges: list[dict[str, Any]]) -> dict[str, float]:
-    weight: dict[str, float] = {}
-    for edge in edges:
-        w = float(edge["weight"])
-        src = edge["sourceId"]
-        tgt = edge["targetId"]
-        weight[src] = weight.get(src, 0.0) + w
-        weight[tgt] = weight.get(tgt, 0.0) + w
-    return weight
-
-
 def _raw_person_impact(
     citation_count: int,
     publication_count: int,
     rank: str | None,
-    structural_weight: float,
 ) -> float:
-    rank_s = _RANK_IMPACT.get(rank or "", 0.4)
+    """Bibliometric impact for dot size — rank only nudges when output exists."""
     cite_s = math.log1p(max(0, citation_count)) * 4.0
-    pub_s = math.log1p(max(0, publication_count)) * 2.0
-    struct_s = math.log1p(max(0.0, structural_weight)) * 0.55
-    return cite_s + pub_s + rank_s * 2.2 + struct_s
+    pub_s = math.log1p(max(0, publication_count)) * 2.5
+    bibliometric = cite_s + pub_s
+    if bibliometric <= 0:
+        return 0.0
+    rank_s = _RANK_IMPACT.get(rank or "", 0.4)
+    return bibliometric + rank_s * 0.6
 
 
 def _normalize_impacts(raw: dict[str, float]) -> dict[str, float]:
     if not raw:
         return {}
-    lo = min(raw.values())
-    hi = max(raw.values())
-    if hi <= lo:
-        return {key: 0.5 for key in raw}
-    span = hi - lo
-    return {key: (value - lo) / span for key, value in raw.items()}
+    max_raw = max(raw.values())
+    if max_raw <= 0:
+        return {key: 0.0 for key in raw}
+    return {key: min(1.0, value / max_raw) for key, value in raw.items()}
 
 
 def _org_node(unit: Organization, institution: Organization | None, sublabel: str) -> dict[str, Any]:
@@ -180,6 +148,7 @@ def _person_node(
     institution_name: str | None,
     rank: str | None,
     stub: bool = False,
+    retired_at: date | None = None,
 ) -> dict[str, Any]:
     return {
         "id": encode("person", person_id),
@@ -190,11 +159,25 @@ def _person_node(
         "orgKind": None,
         "rank": rank,
         "stub": stub,
+        "retiredAt": retired_at,
     }
 
 
-# ---------------------------------------------------------------------------
-# DB queries
+def _org_unit(
+    unit: Organization,
+    institution: Organization | None,
+    *,
+    child_count: int = 0,
+    roster_count: int = 0,
+) -> dict[str, Any]:
+    return {
+        "id": encode("org", unit.id),
+        "label": _org_label(unit, institution),
+        "orgKind": unit.kind,
+        "sublabel": _org_sublabel(unit.kind, child_count, roster_count),
+    }
+
+
 # ---------------------------------------------------------------------------
 
 
@@ -281,26 +264,73 @@ def _roster_page(
     return [dict(r) for r in rows]
 
 
-def _anchor_of(session: Session, person_id: int, on: date) -> dict[str, Any] | None:
+def _anchor_of(
+    session: Session,
+    person_id: int,
+    on: date,
+    *,
+    include_historical: bool = False,
+) -> dict[str, Any] | None:
+    """Chart anchor for `person_id` as of `on`.
+
+    When `include_historical` is true and no row is active on `on`, fall back
+    to the most recent chart anchor so retired coauthors still have a home org.
+    """
+    temporal = "" if include_historical else "AND pa.validity @> :as_of"
     row = session.execute(
         text(
-            """
+            f"""
             SELECT
               pa.affiliation_id,
               pa.title,
               pa.position_rank,
               pa.is_primary,
-              pa.organization_id
+              pa.organization_id,
+              pa.validity,
+              paf.ends_at
             FROM person_anchor pa
+            JOIN person_affiliations paf ON paf.id = pa.affiliation_id
             WHERE pa.person_id = :pid
-              AND pa.validity @> :as_of
-            ORDER BY pa.is_primary DESC
+              {temporal}
+            ORDER BY
+              CASE WHEN pa.validity @> :as_of THEN 0 ELSE 1 END,
+              pa.is_primary DESC,
+              upper(pa.validity) DESC NULLS FIRST,
+              paf.starts_at DESC NULLS LAST
             LIMIT 1
             """
         ),
         {"pid": person_id, "as_of": on},
     ).mappings().first()
     return dict(row) if row else None
+
+
+def _retired_at(anchor: dict[str, Any] | None, on: date) -> date | None:
+    """When the person left the chart roster — not when they stopped publishing."""
+    if anchor is None:
+        return None
+    validity = anchor.get("validity")
+    if validity is not None and on in validity:
+        return None
+    ends_at = anchor.get("ends_at")
+    if ends_at is not None:
+        return ends_at.date() if hasattr(ends_at, "date") else ends_at
+    if validity is not None:
+        upper = validity.upper
+        if upper is not None and not getattr(upper, "inf", False):
+            return upper - timedelta(days=1)
+    return None
+
+
+def _anchor_context(
+    session: Session,
+    person_id: int,
+    on: date,
+) -> tuple[dict[str, Any] | None, date | None]:
+    anchor = _anchor_of(session, person_id, on)
+    if anchor is None:
+        anchor = _anchor_of(session, person_id, on, include_historical=True)
+    return anchor, _retired_at(anchor, on)
 
 
 def _top_coauthors(session: Session, person_id: int, limit: int) -> list[dict[str, Any]]:
@@ -332,7 +362,7 @@ def _person_brief(
     person = session.get(Person, person_id)
     if person is None:
         return None
-    anchor = _anchor_of(session, person_id, on)
+    anchor, retired_at = _anchor_context(session, person_id, on)
     inst_name: str | None = None
     if anchor and anchor.get("organization_id"):
         inst = _institution_of(session, anchor["organization_id"], on)
@@ -343,6 +373,7 @@ def _person_brief(
         "institution": inst_name,
         "role": _person_role(anchor.get("title") if anchor else None),
         "rank": anchor.get("position_rank") if anchor else None,
+        "retiredAt": retired_at,
     }
 
 
@@ -463,6 +494,7 @@ def _person_publications(session: Session, person_id: int, limit: int) -> list[d
             "authorPosition": int(row["author_position"]),
         }
         for row in rows
+        if is_displayable_publication(row["title"])
     ]
 
 
@@ -563,6 +595,11 @@ def _resolve_person(session: Session, person_id: int, on: date) -> dict[str, Any
         "institution": brief["institution"],
         "biography": person.biography,
         "homepageUrl": person.homepage_url,
+        "cvUrl": (
+            f"/api/people/{encode('person', person.id)}/cv"
+            if person.cv_snapshot_id
+            else None
+        ),
         "careerTimeline": _career_timeline(session, person_id),
         "publications": _person_publications(session, person_id, PUBLICATION_LIMIT),
         "closestPeople": _closest_people(session, person_id, on, CLOSEST_PEOPLE_LIMIT),
@@ -589,6 +626,116 @@ def _person_relations(session: Session, person_id: int, kind: str) -> list[Perso
 # ---------------------------------------------------------------------------
 
 
+def _org_ancestry(session: Session, org_id: int, on: date) -> list[Organization]:
+    """Root-to-leaf org chain ending at `org_id`."""
+    chain: list[Organization] = []
+    cur = session.get(Organization, org_id)
+    steps = 0
+    while cur and steps < 12:
+        chain.append(cur)
+        if cur.kind == "university":
+            break
+        parent = _parent_of(session, cur.id, on)
+        if parent is None:
+            break
+        cur = parent
+        steps += 1
+    chain.reverse()
+    return chain
+
+
+def _append_org_ancestry(
+    session: Session,
+    org_id: int,
+    on: date,
+    institution: Organization | None,
+    add_node: Any,
+    links: list[dict[str, Any]],
+) -> None:
+    chain = _org_ancestry(session, org_id, on)
+    inst = institution or (_institution_of(session, chain[0].id, on) if chain else None)
+    for unit in chain:
+        child_n = len(_children_of(session, unit.id, on))
+        roster = _roster_count(session, unit.id, on)
+        add_node(
+            _org_node(unit, inst, _org_sublabel(unit.kind, child_n, roster)),
+        )
+    for i in range(1, len(chain)):
+        links.append(
+            {
+                "source": encode("org", chain[i - 1].id),
+                "target": encode("org", chain[i].id),
+                "relation": "org_parent",
+                "weight": None,
+                "label": None,
+            }
+        )
+
+
+def _append_supervision_neighborhood(
+    session: Session,
+    person_id: int,
+    on: date,
+    institution_name: str | None,
+    add_node: Any,
+    links: list[dict[str, Any]],
+) -> None:
+    """One hop of advisor / advisee links for the top-down person trace."""
+    for rel in _person_relations_all(session, person_id, "advised_by"):
+        if rel.from_person_id == person_id:
+            advisor_id = rel.to_person_id
+            brief = _person_brief(session, advisor_id, on)
+            if brief is None:
+                continue
+            person = brief["person"]
+            add_node(
+                _person_node(
+                    person.id,
+                    person.firstname,
+                    person.middlename,
+                    person.lastname,
+                    brief["role"],
+                    institution_name,
+                    brief.get("rank"),
+                )
+            )
+            links.append(
+                {
+                    "source": encode("person", advisor_id),
+                    "target": encode("person", person_id),
+                    "relation": "report",
+                    "weight": None,
+                    "label": None,
+                }
+            )
+        else:
+            advisee_id = rel.from_person_id
+            brief = _person_brief(session, advisee_id, on)
+            if brief is None:
+                continue
+            person = brief["person"]
+            add_node(
+                _person_node(
+                    person.id,
+                    person.firstname,
+                    person.middlename,
+                    person.lastname,
+                    brief["role"],
+                    institution_name,
+                    brief.get("rank"),
+                )
+            )
+            links.append(
+                {
+                    "source": encode("person", person_id),
+                    "target": encode("person", advisee_id),
+                    "relation": "report",
+                    "weight": None,
+                    "label": None,
+                }
+            )
+
+
 def _expand_person(session: Session, person_id: int, on: date) -> dict[str, Any]:
     person = session.get(Person, person_id)
     if person is None:
@@ -606,7 +753,7 @@ def _expand_person(session: Session, person_id: int, on: date) -> dict[str, Any]
     def add_node(node: dict[str, Any]) -> None:
         nodes.setdefault(node["id"], node)
 
-    anchor = _anchor_of(session, person_id, on)
+    anchor, focus_retired_at = _anchor_context(session, person_id, on)
     focus_rank = anchor.get("position_rank") if anchor else None
     anchor_org: Organization | None = None
     institution: Organization | None = None
@@ -624,17 +771,12 @@ def _expand_person(session: Session, person_id: int, on: date) -> dict[str, Any]
             anchor.get("title") if anchor else None,
             inst_name,
             focus_rank,
+            retired_at=focus_retired_at,
         )
     )
 
     if anchor_org:
-        add_node(
-            _org_node(
-                anchor_org,
-                institution,
-                _org_sublabel(anchor_org.kind, 0, _roster_count(session, anchor_org.id, on)),
-            )
-        )
+        _append_org_ancestry(session, anchor_org.id, on, institution, add_node, links)
         links.append(
             {
                 "source": encode("org", anchor_org.id),
@@ -644,71 +786,33 @@ def _expand_person(session: Session, person_id: int, on: date) -> dict[str, Any]
                 "label": None,
             }
         )
-        parent = _parent_of(session, anchor_org.id, on)
-        if parent:
-            add_node(_org_node(parent, institution, _org_sublabel(parent.kind, 1, 0)))
-            links.append(
-                {
-                    "source": encode("org", parent.id),
-                    "target": encode("org", anchor_org.id),
-                    "relation": "org_parent",
-                    "weight": None,
-                    "label": None,
-                }
-            )
 
-    for rel in _person_relations(session, person_id, "advised_by"):
-        advisor_id = (
-            rel.to_person_id if rel.from_person_id == person_id else rel.from_person_id
-        )
-        advisor = session.get(Person, advisor_id)
-        if not advisor:
-            continue
-        adv_anchor = _anchor_of(session, advisor.id, on)
-        adv_inst: str | None = None
-        adv_rank = adv_anchor.get("position_rank") if adv_anchor else None
-        if adv_anchor and adv_anchor.get("organization_id"):
-            inst = _institution_of(session, adv_anchor["organization_id"], on)
-            adv_inst = inst.name if inst else None
-        add_node(
-            _person_node(
-                advisor.id,
-                advisor.firstname,
-                advisor.middlename,
-                advisor.lastname,
-                adv_anchor.get("title") if adv_anchor else None,
-                adv_inst,
-                adv_rank,
-                stub=True,
-            )
-        )
-        directed_source = (
-            rel.to_person_id if rel.from_person_id == person_id else rel.from_person_id
-        )
-        directed_target = person_id if directed_source == advisor_id else advisor_id
-        links.append(
-            {
-                "source": encode("person", directed_source),
-                "target": encode("person", directed_target),
-                "relation": "report",
-                "weight": None,
-                "label": None,
-            }
-        )
+    _append_supervision_neighborhood(
+        session, person.id, on, inst_name, add_node, links
+    )
 
     for row in _top_coauthors(session, person_id, COAUTHOR_LIMIT):
-        other_id = row["other_id"]
-        if encode("person", other_id) in nodes:
+        other_id = int(row["other_id"])
+        if other_id == person_id or encode("person", other_id) in nodes:
             continue
         other = session.get(Person, other_id)
-        if not other:
+        if other is None:
             continue
-        other_anchor = _anchor_of(session, other.id, on)
+
+        other_anchor, other_retired_at = _anchor_context(session, other.id, on)
         other_inst: str | None = None
         other_rank = other_anchor.get("position_rank") if other_anchor else None
+        other_anchor_org: Organization | None = None
+        other_institution: Organization | None = None
         if other_anchor and other_anchor.get("organization_id"):
-            inst = _institution_of(session, other_anchor["organization_id"], on)
-            other_inst = inst.name if inst else None
+            other_anchor_org = session.get(Organization, other_anchor["organization_id"])
+            other_institution = (
+                _institution_of(session, other_anchor_org.id, on)
+                if other_anchor_org
+                else None
+            )
+            other_inst = other_institution.name if other_institution else None
+
         add_node(
             _person_node(
                 other.id,
@@ -719,18 +823,31 @@ def _expand_person(session: Session, person_id: int, on: date) -> dict[str, Any]
                 other_inst,
                 other_rank,
                 stub=True,
+                retired_at=other_retired_at,
             )
         )
-        weight = int(row["paper_count"])
-        links.append(
-            {
-                "source": encode("person", person.id),
-                "target": encode("person", other.id),
-                "relation": "coauthor",
-                "weight": weight,
-                "label": f"{weight} paper" + ("" if weight == 1 else "s"),
-            }
-        )
+
+        if other_anchor_org:
+            add_node(
+                _org_node(
+                    other_anchor_org,
+                    other_institution,
+                    _org_sublabel(
+                        other_anchor_org.kind,
+                        0,
+                        _roster_count(session, other_anchor_org.id, on),
+                    ),
+                )
+            )
+            links.append(
+                {
+                    "source": encode("org", other_anchor_org.id),
+                    "target": encode("person", other.id),
+                    "relation": "placement",
+                    "weight": None,
+                    "label": None,
+                }
+            )
 
     return {
         "focusId": encode("person", person.id),
@@ -764,18 +881,7 @@ def _expand_org(session: Session, org_id: int, on: date) -> dict[str, Any]:
 
     add_node(_org_node(unit, institution, _org_sublabel(unit.kind, len(children), roster_total)))
 
-    parent = _parent_of(session, org_id, on)
-    if parent:
-        add_node(_org_node(parent, institution, _org_sublabel(parent.kind, 1, 0)))
-        links.append(
-            {
-                "source": encode("org", parent.id),
-                "target": encode("org", unit.id),
-                "relation": "org_parent",
-                "weight": None,
-                "label": None,
-            }
-        )
+    _append_org_ancestry(session, org_id, on, institution, add_node, links)
 
     for child in children:
         child_roster = _roster_count(session, child.id, on)
@@ -949,7 +1055,7 @@ def resolve_projection(_obj, info) -> dict[str, Any]:
         )
     ).mappings().first()
     if active is None:
-        return {"runId": "", "algorithm": "", "pointCount": 0, "points": [], "edges": []}
+        return {"runId": "", "algorithm": "", "pointCount": 0, "points": []}
 
     # One query joins the projection to the person's anchor org (for
     # cluster colour) and up the org tree to the containing institution
@@ -963,22 +1069,39 @@ def resolve_projection(_obj, info) -> dict[str, Any]:
               p.person_id,
               p.x,
               p.y,
+              p.similarity_group,
               pe.firstname,
               pe.middlename,
               pe.lastname,
               pa.title,
               pa.position_rank,
               pa.organization_id AS anchor_org_id,
+              pa.validity,
+              pa.ends_at,
               inst.id            AS institution_id,
               inst.name          AS institution_name,
               coalesce(impact.publication_count, 0) AS publication_count,
-              coalesce(impact.citation_count, 0)    AS citation_count
+              coalesce(impact.citation_count, 0)    AS citation_count,
+              impact.last_publication_year
             FROM person_projections_2d p
             JOIN people pe ON pe.id = p.person_id
-            LEFT JOIN person_anchor pa
-              ON pa.person_id = p.person_id
-             AND pa.validity @> CURRENT_DATE
-             AND pa.is_primary
+            LEFT JOIN LATERAL (
+              SELECT
+                pa.title,
+                pa.position_rank,
+                pa.organization_id,
+                pa.validity,
+                paf.ends_at
+              FROM person_anchor pa
+              JOIN person_affiliations paf ON paf.id = pa.affiliation_id
+              WHERE pa.person_id = p.person_id
+              ORDER BY
+                CASE WHEN pa.validity @> CURRENT_DATE THEN 0 ELSE 1 END,
+                pa.is_primary DESC,
+                upper(pa.validity) DESC NULLS FIRST,
+                paf.starts_at DESC NULLS LAST
+              LIMIT 1
+            ) pa ON TRUE
             LEFT JOIN LATERAL (
               SELECT o.id, o.name
               FROM org_tree_current t
@@ -990,7 +1113,8 @@ def resolve_projection(_obj, info) -> dict[str, Any]:
             LEFT JOIN LATERAL (
               SELECT
                 count(*)::int AS publication_count,
-                coalesce(sum(pub.cited_by_count), 0)::int AS citation_count
+                coalesce(sum(pub.cited_by_count), 0)::int AS citation_count,
+                max(pub.publication_year)::int AS last_publication_year
               FROM publication_authors pa_pub
               JOIN publications pub ON pub.id = pa_pub.publication_id
               WHERE pa_pub.person_id = p.person_id
@@ -1001,9 +1125,6 @@ def resolve_projection(_obj, info) -> dict[str, Any]:
         {"run_id": active["id"]},
     ).mappings().all()
 
-    person_ids = [int(r["person_id"]) for r in rows]
-    edges = _projection_graph_edges(session, person_ids)
-    structural = _structural_weights(edges)
     raw_impact: dict[str, float] = {}
     for r in rows:
         pid = encode("person", int(r["person_id"]))
@@ -1011,34 +1132,156 @@ def resolve_projection(_obj, info) -> dict[str, Any]:
             int(r["citation_count"]),
             int(r["publication_count"]),
             r["position_rank"],
-            structural.get(pid, 0.0),
         )
     impact_by_id = _normalize_impacts(raw_impact)
 
-    points = [
-        {
-            "id": encode("person", int(r["person_id"])),
-            "label": _full_name(r["firstname"], r["middlename"], r["lastname"]),
-            "x": float(r["x"]),
-            "y": float(r["y"]),
-            "institution": r["institution_name"],
-            "institutionId": (
-                encode("org", int(r["institution_id"]))
-                if r["institution_id"] is not None
-                else None
-            ),
-            "rank": r["position_rank"],
-            "impact": impact_by_id[encode("person", int(r["person_id"]))],
+    points = []
+    for r in rows:
+        anchor_row = {
+            "validity": r.get("validity"),
+            "ends_at": r.get("ends_at"),
         }
-        for r in rows
-    ]
+        retired_at = _retired_at(anchor_row, date.today())
+        points.append(
+            {
+                "id": encode("person", int(r["person_id"])),
+                "label": _full_name(r["firstname"], r["middlename"], r["lastname"]),
+                "x": float(r["x"]),
+                "y": float(r["y"]),
+                "institution": r["institution_name"],
+                "institutionId": (
+                    encode("org", int(r["institution_id"]))
+                    if r["institution_id"] is not None
+                    else None
+                ),
+                "rank": r["position_rank"],
+                "impact": impact_by_id[encode("person", int(r["person_id"]))],
+                "similarityGroup": (
+                    int(r["similarity_group"]) if r["similarity_group"] is not None else None
+                ),
+                "retiredAt": retired_at,
+                "lastPublicationYear": (
+                    int(r["last_publication_year"])
+                    if r.get("last_publication_year") is not None
+                    else None
+                ),
+            }
+        )
     return {
         "runId": str(active["id"]),
         "algorithm": active["algorithm"],
         "pointCount": len(points),
         "points": points,
-        "edges": edges,
     }
+
+
+def _active_projection_run(session: Session) -> dict[str, Any] | None:
+    return session.execute(
+        text(
+            """
+            SELECT id, algorithm, point_count
+            FROM embedding_runs
+            WHERE is_active
+            """
+        )
+    ).mappings().first()
+
+
+def _coauthor_ties_on_map(
+    session: Session,
+    person_id: int,
+    run_id: int,
+) -> list[dict[str, Any]]:
+    """Coauthor pairs where the other person is on the active projection."""
+    rows = session.execute(
+        text(
+            """
+            SELECT
+              CASE
+                WHEN e.person_a = :pid THEN e.person_b
+                ELSE e.person_a
+              END AS other_id,
+              e.paper_count
+            FROM person_coauthor_edges e
+            JOIN person_projections_2d p
+              ON p.person_id = CASE
+                WHEN e.person_a = :pid THEN e.person_b
+                ELSE e.person_a
+              END
+             AND p.run_id = :run_id
+            WHERE e.person_a = :pid OR e.person_b = :pid
+            ORDER BY e.paper_count DESC
+            """
+        ),
+        {"pid": person_id, "run_id": run_id},
+    ).mappings().all()
+    return [dict(r) for r in rows]
+
+
+@query.field("personCoauthorTies")
+def resolve_person_coauthor_ties(_obj, info, personId: str) -> list[dict[str, Any]]:
+    kind, row_id = decode(personId)
+    if kind != "person":
+        raise ValueError("personCoauthorTies: personId must be a person id")
+    session = _session(info)
+    active = _active_projection_run(session)
+    if active is None:
+        return []
+    rows = _coauthor_ties_on_map(session, row_id, int(active["id"]))
+    return [
+        {
+            "personId": encode("person", int(r["other_id"])),
+            "paperCount": int(r["paper_count"]),
+        }
+        for r in rows
+    ]
+
+
+@query.field("universities")
+def resolve_universities(_obj, info, on: date | None = None) -> list[dict[str, Any]]:
+    session = _session(info)
+    as_of = on or date.today()
+    units = session.execute(
+        select(Organization)
+        .where(Organization.kind == "university")
+        .order_by(Organization.name)
+    ).scalars()
+    return [
+        _org_unit(
+            unit,
+            unit,
+            child_count=len(_children_of(session, unit.id, as_of)),
+        )
+        for unit in units
+    ]
+
+
+@query.field("orgChildren")
+def resolve_org_children(
+    _obj,
+    info,
+    parentId: str,
+    on: date | None = None,
+) -> list[dict[str, Any]]:
+    kind, row_id = decode(parentId)
+    if kind != "org":
+        raise ValueError("orgChildren: parentId must be an org id")
+    session = _session(info)
+    as_of = on or date.today()
+    parent = session.get(Organization, row_id)
+    if parent is None:
+        return []
+    institution = _institution_of(session, parent.id, as_of)
+    children = _children_of(session, row_id, as_of)
+    return [
+        _org_unit(
+            child,
+            institution,
+            child_count=len(_children_of(session, child.id, as_of)),
+            roster_count=_roster_count(session, child.id, as_of),
+        )
+        for child in children
+    ]
 
 
 @query.field("search")
