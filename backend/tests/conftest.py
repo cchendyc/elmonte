@@ -22,9 +22,8 @@ if _test_url:
     os.environ["DATABASE_URL"] = _test_url
 
 
-import pytest  # noqa: E402  (must come after the env override above)
-
-from api.deps import _SessionLocal  # noqa: E402
+import pytest
+from api.deps import _SessionLocal
 
 
 @pytest.fixture(scope="session", autouse=True)

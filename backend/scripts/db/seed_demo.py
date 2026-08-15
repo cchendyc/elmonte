@@ -10,19 +10,17 @@ Two runs must produce identical row counts (idempotent, no RNG).
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
-from sqlalchemy import text
-
 from api.deps import _SessionLocal
+from sqlalchemy import text
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
 CURRENT_DATE = date.today()
-UTC = timezone.utc
 
 # ---------------------------------------------------------------------------
 # Name lists (60 each, indexed by person_id - 1)
@@ -458,7 +456,7 @@ def _build_paper_authors() -> list[tuple[int, ...]]:
         (8, 13, 18, 34, 35),              # more inter-group
     ]
     for g in multi_groups:
-        papers.append(g)
+        papers.append(g)  # noqa: PERF402 - each tuple is one multi-author paper
 
     # --- Fill: remaining papers to reach 180 ---
     fill_pool = list(range(1, 61))
@@ -849,7 +847,7 @@ def _refresh_matviews(session: Any) -> None:
         try:
             session.execute(text(f"REFRESH MATERIALIZED VIEW {mv}"))
             print(f"  [OK] {mv} refreshed")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - best-effort refresh report
             print(f"  [FAIL] {mv}: {exc}")
 
 
@@ -883,7 +881,7 @@ def _print_summary(session: Any) -> None:
         try:
             cnt = session.execute(text(q)).scalar()
             print(f"  {label}: {cnt}")
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - best-effort summary report
             print(f"  {label}: ERROR - {exc}")
     print("---------------------")
 

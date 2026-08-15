@@ -15,6 +15,8 @@ import {
 } from "./traceCatalog";
 import { orgParentsToPrefetch } from "./tracePath";
 
+const EMPTY_UNIVERSITIES: OrgUnit[] = [];
+
 export function useTraceCatalog(session: SessionState) {
   const client = useApolloClient();
   const { data: uniData, loading: uniLoading } = useQuery<UniversitiesData>(
@@ -25,7 +27,7 @@ export function useTraceCatalog(session: SessionState) {
     Record<string, OrgUnit[]>
   >({});
 
-  const universities = uniData?.universities ?? [];
+  const universities = uniData?.universities ?? EMPTY_UNIVERSITIES;
 
   const catalog: TraceCatalog = useMemo(
     () => catalogFromUnits(universities, childrenByParent),

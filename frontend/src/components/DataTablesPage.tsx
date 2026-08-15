@@ -3,8 +3,12 @@ import { useQuery } from "@apollo/client/react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PROJECTION, type ProjectionData } from "../api/projection";
 import { UNIVERSITIES, type UniversitiesData } from "../api/queries";
+import { rankLabel, type PositionRank } from "../lib/positionRank";
 
 type TableTab = "people" | "organizations";
+
+const EMPTY_PEOPLE: ProjectionData["projection"]["points"] = [];
+const EMPTY_ORGS: UniversitiesData["universities"] = [];
 
 /**
  * Diagnostic table browser over the live database: a paginated, sortable
@@ -26,8 +30,8 @@ export function DataTablesPage() {
   const { data: orgs, loading: orgsLoading, error: orgsError } =
     useQuery<UniversitiesData>(UNIVERSITIES, { fetchPolicy: "cache-first" });
 
-  const people = projection?.projection.points ?? [];
-  const universities = orgs?.universities ?? [];
+  const people = projection?.projection.points ?? EMPTY_PEOPLE;
+  const universities = orgs?.universities ?? EMPTY_ORGS;
   const query = (searchParams.get("q") ?? "").toLowerCase().trim();
 
   const peopleRows = useMemo(
@@ -120,7 +124,7 @@ export function DataTablesPage() {
                     {r.label}
                   </Link>
                 </td>
-                <td>{r.rank ?? ""}</td>
+                <td>{r.rank ? rankLabel(r.rank as PositionRank) : ""}</td>
                 <td>{r.institution ?? ""}</td>
                 <td>{r.clusterLabel ?? ""}</td>
               </tr>
@@ -150,16 +154,19 @@ export function DataTablesPage() {
                   </Link>
                 </td>
                 <td>{r.orgKind ?? ""}</td>
-                <td>{r.sublabel ?? ""}</td>
+                <td>{r.childCount ?? 0}</td>
+                <td>{r.rosterCount ?? 0}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {rows.length === 0 && !peopleLoading && !peopleError && (
-        <p className="detail-panel__empty">No rows match the filter.</p>
-      )}
+      {rows.length === 0 &&
+        !(tab === "people" ? peopleLoading : orgsLoading) &&
+        !(tab === "people" ? peopleError : orgsError) && (
+          <p className="detail-panel__empty">No rows match the filter.</p>
+        )}
 
       {pageCount > 1 && (
         <nav className="data-tables__pager" aria-label="Pagination">

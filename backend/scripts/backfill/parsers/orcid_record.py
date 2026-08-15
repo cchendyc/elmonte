@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from scripts.backfill.common import CvAffiliationCandidate
@@ -74,7 +74,7 @@ def _partial_date(raw: dict[str, Any] | None) -> datetime | None:
     day = _int_value(raw.get("day")) or 1
     month = max(1, min(month, 12))
     day = max(1, min(day, 28))
-    return datetime(year, month, day, tzinfo=timezone.utc)
+    return datetime(year, month, day, tzinfo=UTC)
 
 
 def _int_value(node: Any) -> int | None:

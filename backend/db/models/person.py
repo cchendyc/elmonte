@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import CheckConstraint, Index, Text, text
+from sqlalchemy import CheckConstraint, Identity, Index, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.models import enums
@@ -20,7 +20,20 @@ class Person(Base, TimestampMixin):
             "btrim(firstname) <> ''", name="people_firstname_not_blank"
         ),
         CheckConstraint("btrim(lastname) <> ''", name="people_lastname_not_blank"),
+        CheckConstraint(
+            "homepage_url IS NULL OR homepage_url ~* '^https?://'",
+            name="people_homepage_url_scheme",
+        ),
+        CheckConstraint(
+            "cv_url IS NULL OR cv_url ~* '^https?://'",
+            name="people_cv_url_scheme",
+        ),
         Index("idx_people_lastname", "lastname"),
+        Index(
+            "idx_people_cv_snapshot",
+            "cv_snapshot_id",
+            postgresql_where=text("cv_snapshot_id IS NOT NULL"),
+        ),
         Index(
             "idx_people_firstname_trgm",
             "firstname",
@@ -35,7 +48,7 @@ class Person(Base, TimestampMixin):
         ),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     firstname: Mapped[str] = mapped_column(Text, nullable=False)
     middlename: Mapped[str | None] = mapped_column(Text)
     lastname: Mapped[str] = mapped_column(Text, nullable=False)

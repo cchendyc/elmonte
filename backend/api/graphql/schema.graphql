@@ -18,6 +18,20 @@ enum Relation {
   coauthor
 }
 
+"""Evidence verdict for a fact. Mirrors the Postgres `verification_status` enum."""
+enum VerificationStatus {
+  verified
+  unverified
+  disputed
+}
+
+"""A provenance citation backing one fact."""
+type EvidenceSource {
+  label: String
+  url: String!
+  sourceKind: String!
+}
+
 type HopNode {
   """Prefixed public id: `p:123` for a person, `o:45` for an org."""
   id: ID!
@@ -90,6 +104,11 @@ type SearchPersonHit {
   label: String!
   role: String
   institution: String
+  orcid: String
+  """Top-ranked research field for this person (best disambiguation signal)."""
+  researchArea: String
+  publicationCount: Int
+  lastPublicationYear: Int
 }
 
 type SearchOrgHit {
@@ -103,12 +122,37 @@ type SearchResults {
   orgs: [SearchOrgHit!]!
 }
 
-"""Lightweight org row for the top-down investigation trace."""
+"""Lightweight org row for the top-down investigation trace and institution browser."""
 type OrgUnit {
   id: ID!
   label: String!
   orgKind: String!
   sublabel: String
+  """Direct primary child units active as of the query date."""
+  childCount: Int
+  """People chart-anchored directly at this org (not its descendants)."""
+  rosterCount: Int
+}
+
+"""Full institution/organization profile for the /institution route."""
+type OrgProfile {
+  id: ID!
+  label: String!
+  name: String!
+  orgKind: String!
+  sublabel: String
+  country: String
+  homepageUrl: String
+  description: String
+  """Parent org unit, when this org is not a university root."""
+  parent: OrgUnit
+  """Primary children active as of the query date."""
+  children: [OrgUnit!]!
+  """People chart-anchored directly at this org."""
+  rosterCount: Int!
+  """People chart-anchored at this org and all descendants (current tree)."""
+  subtreePeopleCount: Int!
+  externalIdentifiers: [ExportIdentifier!]!
 }
 
 type ProjectionPoint {
@@ -177,6 +221,8 @@ type CareerEntry {
   isPrimary: Boolean!
   startsAt: Date
   endsAt: Date
+  verificationStatus: VerificationStatus!
+  sources: [EvidenceSource!]!
 }
 
 type PersonPublication {
@@ -185,6 +231,38 @@ type PersonPublication {
   year: Int!
   citedByCount: Int
   authorPosition: Int!
+  doi: String
+  venue: String
+}
+
+type PersonAward {
+  name: String!
+  awardedAt: Date
+  verificationStatus: VerificationStatus!
+  sources: [EvidenceSource!]!
+}
+
+type PersonGrant {
+  title: String!
+  funder: String!
+  role: String!
+  awardNumber: String
+  amount: Float
+  currency: String
+  startsAt: Date
+  endsAt: Date
+  verificationStatus: VerificationStatus!
+  sources: [EvidenceSource!]!
+}
+
+type ExportPersonRelationship {
+  type: String!
+  otherPersonId: ID!
+  otherPersonLabel: String!
+  startsAt: Date
+  endsAt: Date
+  verificationStatus: VerificationStatus!
+  sources: [EvidenceSource!]!
 }
 
 type ClosestPerson {
@@ -209,6 +287,10 @@ type PersonProfile {
   careerTimeline: [CareerEntry!]!
   publications: [PersonPublication!]!
   closestPeople: [ClosestPerson!]!
+  awards: [PersonAward!]!
+  grants: [PersonGrant!]!
+  personTopics: [ExportTopic!]!
+  personConcepts: [ExportConcept!]!
 }
 
 """One alter in the ego-centric perspective of a focused person."""
@@ -256,6 +338,9 @@ type PersonExport {
   closestPeople: [ClosestPerson!]!
   personTopics: [ExportTopic!]!
   personConcepts: [ExportConcept!]!
+  awards: [PersonAward!]!
+  grants: [PersonGrant!]!
+  personRelationships: [ExportPersonRelationship!]!
 }
 
 type ExportIdentifier {
@@ -271,8 +356,8 @@ type ExportTopic {
 
 type ExportConcept {
   displayName: String!
-  score: Float!
-  rank: Int!
+  score: Float
+  rank: Int
 }
 
 type Query {
@@ -296,6 +381,9 @@ type Query {
 
   """All universities for the trace picker (Stanford, Berkeley, …)."""
   universities(on: Date): [OrgUnit!]!
+
+  """Full institution page profile (directory metadata + hierarchy summary)."""
+  org(id: ID!, on: Date): OrgProfile
 
   """Direct child org units under a parent (schools, departments, labs, …)."""
   orgChildren(parentId: ID!, on: Date): [OrgUnit!]!

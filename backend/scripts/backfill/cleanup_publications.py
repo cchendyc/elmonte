@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import (
     is_junk_publication_title,
     normalize_title_for_dedupe,
@@ -215,6 +216,19 @@ def _load_publications(session: Session) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def _find(parent: list[int], i: int) -> int:
+    while parent[i] != i:
+        parent[i] = parent[parent[i]]
+        i = parent[i]
+    return i
+
+
+def _unite(parent: list[int], i: int, j: int) -> None:
+    ri, rj = _find(parent, i), _find(parent, j)
+    if ri != rj:
+        parent[ri] = rj
+
+
 def _cluster_duplicates(rows: list[dict]) -> list[list[dict]]:
     """Cluster duplicate papers (same title across years or OpenAlex work ids)."""
     norm_groups: dict[str, list[dict]] = defaultdict(list)
@@ -228,17 +242,6 @@ def _cluster_duplicates(rows: list[dict]) -> list[list[dict]]:
 
         parent = list(range(len(group)))
 
-        def find(i: int) -> int:
-            while parent[i] != i:
-                parent[i] = parent[parent[i]]
-                i = parent[i]
-            return i
-
-        def unite(i: int, j: int) -> None:
-            ri, rj = find(i), find(j)
-            if ri != rj:
-                parent[ri] = rj
-
         for i in range(len(group)):
             for j in range(i + 1, len(group)):
                 if publications_likely_same_paper(
@@ -247,11 +250,11 @@ def _cluster_duplicates(rows: list[dict]) -> list[list[dict]]:
                     group[j]["title"],
                     group[j]["publication_year"],
                 ):
-                    unite(i, j)
+                    _unite(parent, i, j)
 
         buckets: dict[int, list[dict]] = defaultdict(list)
         for idx, row in enumerate(group):
-            buckets[find(idx)].append(row)
+            buckets[_find(parent, idx)].append(row)
         clusters.extend(bucket for bucket in buckets.values() if len(bucket) > 1)
     return clusters
 

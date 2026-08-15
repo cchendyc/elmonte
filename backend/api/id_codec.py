@@ -11,6 +11,11 @@ enumeration / systematic scraping.  This is **NOT** cryptographic security —
 IDs must remain guessable for unauthenticated link-sharing to work — it is
 purely obscurity.  The salt is read from ``ELMONTE_ID_SALT`` (a dev default
 with a warning is used when unset).
+
+**Format disjointness:** legacy ids are plain decimal strings (``p:123``).
+Encoded tokens therefore never use an all-decimal suffix; if XOR + base36
+would produce one, the token is prefixed with ``_`` (which is not part of
+the legacy or base-36 alphabets), so the two formats can never be confused.
 """
 
 from __future__ import annotations
@@ -52,6 +57,16 @@ else:
 
 _ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
 
+# PostgreSQL BIGINT range.  Decode rejects values outside it instead of
+# letting a crafted id surface as a bind error deep inside a resolver.
+_BIGINT_MIN = 0
+_BIGINT_MAX = (1 << 63) - 1
+
+# Newly-encoded tokens are guaranteed never to be purely decimal, so the
+# legacy `p:123` interpretation and the obfuscated format can never collide.
+# A `_` prefix marks a base-36 token that happened to be all digits.
+_DECIMAL_TOKEN_PREFIX = "_"
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -81,16 +96,29 @@ def _base36_encode(n: int) -> str:
 def _base36_decode(s: str) -> int:
     """Decode a base-36 string back to an integer.
 
-    Raises :class:`ValueError` for an empty string (``decode()`` already
-    rejects empty tails, but the helper itself should not silently produce 0).
-    Invalid characters raise :class:`ValueError` from ``str.index``.
+    Accepts uppercase input (URLs are case-preserving, and some clients
+    uppercase pasted ids).  Raises :class:`ValueError` for an empty string
+    or invalid characters.
     """
     if not s:
         raise ValueError("empty base36 string")
     n = 0
-    for ch in s:
+    for ch in s.lower():
         n = n * 36 + _ALPHABET.index(ch)
     return n
+
+
+def _validate_row_id(row_id: int) -> None:
+    """IDs must be valid PostgreSQL BIGINT row ids."""
+    if isinstance(row_id, bool) or not isinstance(row_id, int):
+        raise ValueError(  # noqa: TRY004
+            f"row id must be an integer, got {type(row_id).__name__}"
+        )
+    if row_id < _BIGINT_MIN or row_id > _BIGINT_MAX:
+        raise ValueError(
+            f"row id {row_id} is outside the BIGINT range "
+            f"[{_BIGINT_MIN}, {_BIGINT_MAX}]"
+        )
 
 
 def _obfuscate(row_id: int, mask: int | None = None) -> str:
@@ -103,10 +131,16 @@ def _obfuscate(row_id: int, mask: int | None = None) -> str:
     If *mask* is ``None`` the module-level :data:`_XOR_MASK` (derived from
     ``ELMONTE_ID_SALT``) is used.
     """
+    _validate_row_id(row_id)
     if mask is None:
         mask = _XOR_MASK
     obfuscated = row_id ^ mask
-    return _base36_encode(obfuscated)
+    token = _base36_encode(obfuscated)
+    if token.isdigit():
+        # ``p:100`` is reserved for the legacy numeric-id path.  Marking an
+        # all-digit base-36 token makes the two formats disjoint.
+        token = _DECIMAL_TOKEN_PREFIX + token
+    return token
 
 
 def _deobfuscate(token: str, mask: int | None = None) -> int:
@@ -116,8 +150,11 @@ def _deobfuscate(token: str, mask: int | None = None) -> int:
     """
     if mask is None:
         mask = _XOR_MASK
+    token = token.removeprefix(_DECIMAL_TOKEN_PREFIX)
     n = _base36_decode(token)
-    return n ^ mask
+    row_id = n ^ mask
+    _validate_row_id(row_id)
+    return row_id
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +170,9 @@ def encode(kind: NodeKind, row_id: int, salt: str | None = None) -> str:
     If *salt* is provided it overrides the ``ELMONTE_ID_SALT`` environment
     variable for this call, which is useful for testing.
     """
+    if kind not in _PREFIXES:
+        raise ValueError(f"unknown id kind: {kind!r}")
+    _validate_row_id(row_id)
     mask = _derive_mask(salt) if salt is not None else _XOR_MASK
     return f"{_PREFIXES[kind]}:{_obfuscate(row_id, mask)}"
 
@@ -152,7 +192,7 @@ def decode(public_id: str, salt: str | None = None) -> tuple[NodeKind, int]:
 
     Raises :class:`ValueError` for malformed or unknown-format ids.
     """
-    if ":" not in public_id:
+    if not isinstance(public_id, str) or ":" not in public_id:
         raise ValueError(f"malformed id: {public_id!r}")
     prefix, tail = public_id.split(":", 1)
     if prefix not in _INV:
@@ -162,10 +202,9 @@ def decode(public_id: str, salt: str | None = None) -> tuple[NodeKind, int]:
 
     # Legacy numeric ids — accept unchanged for backward compatibility.
     if tail.isdigit():
-        try:
-            return _INV[prefix], int(tail)
-        except ValueError as exc:
-            raise ValueError(f"malformed id: {public_id!r}") from exc
+        row_id = int(tail)
+        _validate_row_id(row_id)
+        return _INV[prefix], row_id
 
     # Obfuscated (current) format.
     mask = _derive_mask(salt) if salt is not None else _XOR_MASK

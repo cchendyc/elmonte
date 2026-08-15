@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Date,
+    Identity,
     Index,
     Integer,
     SmallInteger,
@@ -42,7 +43,7 @@ class Publication(Base, TimestampMixin):
         ),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     publication_year: Mapped[int] = mapped_column(SmallInteger, nullable=False)
     publication_date: Mapped[date | None] = mapped_column(Date)
@@ -86,7 +87,7 @@ class PublicationAuthorAffiliation(Base):
         Index("idx_pub_author_affiliations_org", "organization_id"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     publication_id: Mapped[int] = mapped_column(RowId, nullable=False)
     person_id: Mapped[int] = mapped_column(RowId, nullable=False)
     organization_id: Mapped[int] = mapped_column(RowId, nullable=False)

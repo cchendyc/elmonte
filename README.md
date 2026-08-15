@@ -20,6 +20,23 @@ npm run dev            # starts Vite (5173) + uvicorn (8000) together
 `npm run dev:web` / `npm run dev:api` start either half.  The Vite dev server
 proxies `/api/*` to `:8000`.
 
+### Test tiers
+
+| Command | What it proves |
+|---|---|
+| `npm test` | Vitest unit tests + full backend suite against `TEST_DATABASE_URL` |
+| `npm run test:live` | read-only backend assertions against the **real** app database from `.env` |
+| `npm run test:e2e` | Playwright browser → Vite proxy → FastAPI → real database E2E (start `npm run dev` first) |
+| `npm run db:integrity` | referential-integrity audit for the FK-free schema |
+| `npm run db:integrity:fix` | delete safe orphan rows and refresh affected materialized views |
+
+E2E prerequisites (once per machine):
+
+```bash
+python3 -m pip install -r e2e/requirements.txt
+python3 -m playwright install chromium
+```
+
 ## Repository layout
 
 ```
@@ -55,10 +72,19 @@ cd backend
 python3 -m scripts.backfill.taxonomy               # topics taxonomy (~4.5k)
 python3 -m scripts.backfill.taxonomy --concepts    # concepts tree (~65k, flat — see below)
 python3 -m scripts.backfill.publications --all-universities --refresh
+python3 -m scripts.backfill.openalex_institutions   # chart-anchor every matched author
 python3 -m scripts.backfill.topics                 # per-work topics -> person_topics
 python3 -m scripts.backfill.concepts --all-universities   # publication/person concepts
 python3 -m scripts.embed.build_atlas --view both   # rebuild the atlas
+python3 -m scripts.admin.integrity_check           # verify the FK-free schema stays clean
 ```
+
+`openalex_institutions` materializes the OpenAlex lineage for every matched
+author, deduplicates by OpenAlex org id/name, refreshes the org/person
+materialized views, and scopes each person's writes in a savepoint so one bad
+lineage cannot strand partial rows. It deliberately refuses to re-parent an
+existing university root (OpenAlex lineages sometimes place UC Berkeley under
+an institute); universities remain roots in this product model.
 
 Data pipelines connect through `DATABASE_URL`; for migrations and psql the
 scripts prefer `DIRECT_URL` (Neon's direct endpoint, no PgBouncer).  The
@@ -140,15 +166,15 @@ fidelity <= 0.15, overlap <= 0.05).
 
 | Action | What to see |
 |--------|-------------|
-| Search `Wei Zhang` | Two disambiguation cards (ORCID, field, institution) |
-| **Alice Chen** profile | Year slider, dotted former lines, disputed/unverified edges, timeline ↔ graph highlight |
-| **Jennifer Doudna** | Nobel Prize as **person attribute** (not a graph node); open explore for company `founded` |
+| Search `Jamie Doe` | Two disambiguation cards (ORCID, field, institution) |
+| **Casey Doe** profile | Year slider, dotted former lines, disputed/unverified edges, timeline ↔ graph highlight |
+| **Avery Doe** | Demo Prize as **person attribute** (not a graph node); open explore for company `founded` |
 | Search `Berkeley` | Institution card → affiliated people |
-| **Find the connection** on home | Alice → Patricia Lang advisor chain (demo) |
-| `/explore/person-jennifer` | Click nodes to expand; filter relationship types |
+| **Find the connection** on home | Casey → Pat advisor chain (demo) |
+| `/explore/person-d` | Click nodes to expand; filter relationship types |
 
-> Personas and orgs above (Wei Zhang, Alice Chen, Jennifer Doudna, …) are
-> demo dataset fixtures — swap in your own directory's people.
+> Personas and orgs above (Jamie Doe, Casey Doe, Avery Doe, …) are
+> synthetic demo fixtures — swap in your own directory's people.
 
 ## Product principles (encoded in types/README)
 

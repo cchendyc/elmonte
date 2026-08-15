@@ -43,6 +43,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # allow `python scripts/backfill/profiles.py`
 
 from api.deps import _SessionLocal
+
 from scripts.backfill import common
 from scripts.backfill.common import (
     PoliteFetcher,
@@ -116,20 +117,19 @@ def _apply(
     """Persist the extraction. Returns per-field counters for reporting."""
     stats: Counter = Counter()
 
-    if extraction.biography:
-        if upsert_biography(
+    if extraction.biography and upsert_biography(
+        session,
+        person_id=person_id,
+        biography=extraction.biography,
+        overwrite=overwrite,
+    ):
+        stats["biography_written"] += 1
+        add_evidence(
             session,
+            snapshot_id=snapshot_id,
+            label="profile:biography",
             person_id=person_id,
-            biography=extraction.biography,
-            overwrite=overwrite,
-        ):
-            stats["biography_written"] += 1
-            add_evidence(
-                session,
-                snapshot_id=snapshot_id,
-                label="profile:biography",
-                person_id=person_id,
-            )
+        )
 
     if extraction.title:
         result = upsert_current_affiliation_title(
@@ -153,30 +153,28 @@ def _apply(
             else:
                 stats["title_already_set"] += 1
 
-    if extraction.orcid:
-        if upsert_external_identifier(
-            session,
-            provider="orcid",
-            external_id=extraction.orcid,
-            person_id=person_id,
-            snapshot_id=snapshot_id,
-        ):
-            stats["orcid_written"] += 1
+    if extraction.orcid and upsert_external_identifier(
+        session,
+        provider="orcid",
+        external_id=extraction.orcid,
+        person_id=person_id,
+        snapshot_id=snapshot_id,
+    ):
+        stats["orcid_written"] += 1
 
-    if extraction.personal_url:
-        if upsert_homepage_url(
+    if extraction.personal_url and upsert_homepage_url(
+        session,
+        person_id=person_id,
+        homepage_url=extraction.personal_url,
+        overwrite=overwrite,
+    ):
+        stats["homepage_written"] += 1
+        add_evidence(
             session,
+            snapshot_id=snapshot_id,
+            label="profile:homepage",
             person_id=person_id,
-            homepage_url=extraction.personal_url,
-            overwrite=overwrite,
-        ):
-            stats["homepage_written"] += 1
-            add_evidence(
-                session,
-                snapshot_id=snapshot_id,
-                label="profile:homepage",
-                person_id=person_id,
-            )
+        )
 
     if extraction.publications:
         # Deferred to OpenAlex ingest — profile pages lack DOIs and clean

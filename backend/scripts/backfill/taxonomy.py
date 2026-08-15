@@ -41,8 +41,9 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -50,8 +51,9 @@ from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from api.deps import _SessionLocal  # noqa: E402
-from scripts.backfill.openalex import OpenAlexClient, short_id  # noqa: E402
+from api.deps import _SessionLocal
+
+from scripts.backfill.openalex import OpenAlexClient, short_id
 
 PER_PAGE = 200
 # Batches are executed with executemany: on Neon (or any remote Postgres) a

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Index, Text, text
+from sqlalchemy import DateTime, Identity, Index, Text, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.models import enums
@@ -16,7 +16,7 @@ class Award(Base, CreatedAtMixin):
         Index("idx_awards_awarding_org", "awarding_org_id"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     awarding_org_id: Mapped[int | None] = mapped_column(RowId)
 
@@ -35,7 +35,7 @@ class PersonAward(Base, CreatedAtMixin):
         Index("idx_person_awards_award", "award_id"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     person_id: Mapped[int] = mapped_column(RowId, nullable=False)
     award_id: Mapped[int] = mapped_column(RowId, nullable=False)
     awarded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

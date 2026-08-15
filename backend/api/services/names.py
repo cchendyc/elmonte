@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Small naming / role helpers (no DB access)."""
 
-from typing import Any
 
 def _full_name(first: str | None, middle: str | None, last: str | None) -> str:
     parts = [p for p in (first, middle, last) if p]

@@ -7,8 +7,8 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Identity,
     Index,
-    Text,
     text,
 )
 from sqlalchemy.dialects.postgresql import DATERANGE
@@ -43,7 +43,7 @@ class PersonRelationship(Base, TimestampMixin):
         Index("idx_person_relationships_to", "to_person_id", "type"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     type: Mapped[str] = mapped_column(enums.person_relationship_type, nullable=False)
     from_person_id: Mapped[int] = mapped_column(RowId, nullable=False)
     to_person_id: Mapped[int] = mapped_column(RowId, nullable=False)

@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import upsert_external_identifier, write_snapshot
 from scripts.backfill.orcid_client import (
     OrcidClient,

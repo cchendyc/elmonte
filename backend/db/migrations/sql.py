@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import os
-import subprocess
 from pathlib import Path
+from typing import Any
+
+from sqlalchemy import create_engine, text
 
 from db.config import get_direct_url
 
@@ -39,6 +40,13 @@ DROP TABLE IF EXISTS
   concepts,
   person_aliases,
   people,
+  projection_cluster_edges,
+  projection_clusters,
+  person_projections_2d,
+  embedding_runs,
+  person_topics,
+  publication_topics,
+  topics,
   org_units,
   org_unit_relationships,
   companies,
@@ -65,68 +73,78 @@ CASCADE;
 """
 
 
-def _run_psql(sql: str | Path) -> None:
-    # DDL through the direct URL — the pooled (PgBouncer) endpoint is for
-    # the app; migrations and psql need a real session.
-    url = get_direct_url()
-    if isinstance(sql, Path):
-        cmd = ["psql", url, "-v", "ON_ERROR_STOP=1", "-f", str(sql)]
-    else:
-        cmd = ["psql", url, "-v", "ON_ERROR_STOP=1", "-c", sql]
-    subprocess.run(cmd, check=True, env=os.environ.copy())
+def _sqlalchemy_url(url: str) -> str:
+    """Force psycopg3, accepting either PostgreSQL URL spelling."""
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    return url
 
 
-def apply_schema() -> None:
+def apply_schema(connection: Any | None = None) -> None:
     """Full rebuild from db/schema.sql (authoritative) — FRESH databases only.
 
-    schema.sql drops and recreates the base tables it owns; tables added by
-    later migrations (topics, person_topics, projections, ...) are invisible
-    to it, so running it over a migrated database silently wipes their data
-    while leaving the migration tables standing.  The initial migration
-    (9a20bc7cc432) calls this exactly once, on an empty database.
+    ``schema.sql`` owns every object in the current schema (including the
+    atlas/topic tables added by historical migrations), so running it over a
+    populated database destroys data.  The initial migration calls this once
+    with the Alembic connection; later historical migrations become no-ops
+    because the end state is already present.
     """
-    _guard_schema_rebuild()
-    _run_psql(SCHEMA_SQL)
+    if connection is None:
+        engine = create_engine(_sqlalchemy_url(get_direct_url()))
+        try:
+            with engine.begin() as conn:
+                _guard_schema_rebuild(conn)
+                conn.exec_driver_sql(SCHEMA_SQL.read_text(encoding="utf-8"))
+            return
+        finally:
+            engine.dispose()
+
+    _guard_schema_rebuild(connection)
+    connection.exec_driver_sql(SCHEMA_SQL.read_text(encoding="utf-8"))
 
 
-def _guard_schema_rebuild() -> None:
-    """Refuse to rebuild when the target DB already has migrations or
-    migration-only tables (defense-in-depth against the 2026-08-09 incident:
-    a URL mismatch pointed this at the app database)."""
-    from sqlalchemy import create_engine, text
+def _guard_schema_rebuild(connection: Any) -> None:
+    """Refuse to rebuild when the target DB already has migrations or data.
 
-    url = get_direct_url()
-    engine = create_engine(url.replace("postgresql://", "postgresql+psycopg://", 1))
-    try:
-        with engine.connect() as conn:
-            # Catalog-only probes: on a fresh database alembic_version doesn't
-            # exist yet, so never reference it in SQL that Postgres would
-            # resolve at parse time.
-            has_alembic = conn.execute(
-                text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
-            ).scalar()
-            n_migrations = (
-                conn.execute(text("SELECT count(*) FROM alembic_version")).scalar()
-                if has_alembic
-                else 0
-            )
-            has_migration_tables = conn.execute(
-                text(
-                    "SELECT to_regclass('public.topics') IS NOT NULL"
-                    " OR to_regclass('public.person_projections_2d') IS NOT NULL"
-                )
-            ).scalar()
-            if n_migrations or has_migration_tables:
-                raise RuntimeError(
-                    "apply_schema() refused: the target database is not fresh "
-                    f"(alembic_version={n_migrations}, migration tables present="
-                    f"{has_migration_tables}). schema.sql is a full rebuild for "
-                    "empty databases only; use `alembic upgrade head` instead."
-                )
-    finally:
-        engine.dispose()
+    Defense-in-depth against the 2026-08-09 incident: a URL mismatch pointed
+    this at the app database.
+    """
+    # Catalog-only probes: on a fresh database alembic_version does not exist
+    # yet, so never reference it in SQL that Postgres resolves at parse time.
+    has_alembic = connection.execute(
+        text("SELECT to_regclass('public.alembic_version') IS NOT NULL")
+    ).scalar()
+    n_migrations = (
+        connection.execute(text("SELECT count(*) FROM alembic_version")).scalar()
+        if has_alembic
+        else 0
+    )
+    has_migration_tables = connection.execute(
+        text(
+            "SELECT to_regclass('public.topics') IS NOT NULL"
+            " OR to_regclass('public.person_projections_2d') IS NOT NULL"
+        )
+    ).scalar()
+    if n_migrations or has_migration_tables:
+        raise RuntimeError(
+            "apply_schema() refused: the target database is not fresh "
+            f"(alembic_version={n_migrations}, migration tables present="
+            f"{has_migration_tables}). schema.sql is a full rebuild for "
+            "empty databases only; use `alembic upgrade head` instead."
+        )
 
 
-def teardown_schema() -> None:
+def teardown_schema(connection: Any | None = None) -> None:
     """Drop all objects owned by the El Monte schema."""
-    _run_psql(TEARDOWN_SQL)
+    if connection is None:
+        engine = create_engine(_sqlalchemy_url(get_direct_url()))
+        try:
+            with engine.begin() as conn:
+                conn.exec_driver_sql(TEARDOWN_SQL)
+            return
+        finally:
+            engine.dispose()
+
+    connection.exec_driver_sql(TEARDOWN_SQL)

@@ -20,6 +20,7 @@ from sqlalchemy import text
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import canonicalize_orcid, upsert_external_identifier, write_snapshot
 from scripts.backfill.openalex import (
     OpenAlexClient,

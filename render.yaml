@@ -5,7 +5,7 @@ services:
     name: elmonte-api
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    buildCommand: pip install -r requirements.txt && cd backend && alembic upgrade head
     # API rate limiting is in-process (per-worker) — keep a single uvicorn
     # worker (the default). Behind Render's proxy, X-Forwarded-For appends
     # the client IP, which backend/api/main.py trusts for rate limiting.
@@ -13,6 +13,10 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
+        sync: false
+      - key: ELMONTE_ENV
+        value: production
+      - key: ELMONTE_ID_SALT
         sync: false
       - key: CORS_ORIGINS
         sync: false

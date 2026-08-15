@@ -46,7 +46,12 @@ from db.models.grant import Grant, GrantParticipant
 from db.models.organization import Organization, OrgRelationship
 from db.models.person import Person, PersonAlias
 from db.models.person_relationship import PersonRelationship
-from db.models.projection import EmbeddingRun, PersonProjection2D
+from db.models.projection import (
+    EmbeddingRun,
+    PersonProjection2D,
+    ProjectionCluster,
+    ProjectionClusterEdge,
+)
 from db.models.provenance import Evidence, ExternalIdentifier, SourceSnapshot
 from db.models.publication import (
     Publication,
@@ -54,6 +59,7 @@ from db.models.publication import (
     PublicationAuthorAffiliation,
     PublicationCitation,
 )
+from db.models.topic import PersonTopic, PublicationTopic, Topic
 
 __all__ = [
     "AffiliationOrgAssignment",
@@ -74,11 +80,16 @@ __all__ = [
     "PersonConcept",
     "PersonProjection2D",
     "PersonRelationship",
+    "PersonTopic",
+    "ProjectionCluster",
+    "ProjectionClusterEdge",
     "Publication",
     "PublicationAuthor",
     "PublicationAuthorAffiliation",
     "PublicationCitation",
     "PublicationConcept",
+    "PublicationTopic",
     "SourceSnapshot",
+    "Topic",
     "enums",
 ]

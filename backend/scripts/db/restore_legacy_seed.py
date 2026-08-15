@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Restore the original repo seed data (``db/seed.sql``) into the current schema.
 
-The repo shipped with ``db/seed.sql`` (the original author's prototype data:
+The repo shipped with ``db/seed.sql`` (a synthetic prototype dataset:
 9 universities, 12 people, concepts, awards, grants, evidence, ...) but its
-primary keys are **text slugs** (``'inst-uoft'``, ``'person-alice'``) while
+primary keys are **text slugs** (``'inst-uoft'``, ``'person-a'``) while
 the current schema uses BIGINT identity ids — the old file can't be loaded
 as-is.
 
@@ -37,7 +37,7 @@ from sqlalchemy import text
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from api.deps import _SessionLocal  # noqa: E402
+from api.deps import _SessionLocal
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SEED_PATH = _REPO_ROOT / "db" / "seed.sql"
@@ -148,7 +148,7 @@ def _to_value(raw: str) -> Any:
     except ValueError:
         try:
             return Decimal(raw)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise ValueError(f"cannot parse seed value: {raw!r}") from exc
 
 

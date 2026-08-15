@@ -3,7 +3,6 @@ from __future__ import annotations
 """Research-impact scoring helpers (pure; no DB access)."""
 
 import math
-from typing import Any
 
 _RANK_IMPACT: dict[str, float] = {
     "dean": 1.0,

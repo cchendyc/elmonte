@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -25,8 +24,8 @@ from sqlalchemy import text
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from api.deps import _SessionLocal  # noqa: E402
-from api.id_codec import decode  # noqa: E402
+from api.deps import _SessionLocal
+from api.id_codec import decode
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -35,7 +34,8 @@ from api.id_codec import decode  # noqa: E402
 # Tables in dependency order (child before parent) for deletion.
 # Each entry: (table_name, condition_sql, param_keys)
 # condition_sql uses :pid as the person_id placeholder.
-_RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "ingest" / "raw"
+_RAW_DIR = Path(__file__).resolve().parents[3] / "data" / "ingest" / "raw"
+_REPO_ROOT = _RAW_DIR.parents[1]
 
 
 def _resolve_person(session: Any, identifier: str) -> tuple[int, str, dict[str, Any]]:
@@ -532,7 +532,7 @@ def _execute_plan(
                     )
                     print(f"  [OK] REFRESH {mv_name}")
                     summary[label] = 0
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - best-effort refresh report
                     print(f"  [FAIL] REFRESH {mv_name}: {exc}")
                     summary[label] = 0
             continue
@@ -572,7 +572,7 @@ def _execute_plan(
                     continue
                 full_path = Path(local_path)
                 if not full_path.is_absolute():
-                    full_path = Path(__file__).resolve().parents[2] / local_path
+                    full_path = _REPO_ROOT / local_path
                 try:
                     resolved = full_path.resolve()
                     raw_resolved = _RAW_DIR.resolve()
@@ -585,7 +585,7 @@ def _execute_plan(
                             print(f"  [--]  {local_path} (already gone)")
                     else:
                         print(f"  [SKIP] {local_path} (outside raw dir, not removed)")
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 - file cleanup is best-effort
                     print(f"  [WARN] Could not remove {local_path}: {exc}")
 
     return summary

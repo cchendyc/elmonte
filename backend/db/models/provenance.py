@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
+    Identity,
     Index,
     Integer,
     Text,
@@ -46,7 +47,7 @@ class SourceSnapshot(Base):
         Index("idx_source_snapshots_url", "source_url"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
     source_kind: Mapped[str] = mapped_column(enums.source_kind, nullable=False)
     fetched_at: Mapped[datetime] = mapped_column(
@@ -75,7 +76,7 @@ class Evidence(Base, CreatedAtMixin):
         Index("idx_evidence_snapshot", "snapshot_id"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     label: Mapped[str | None] = mapped_column(Text)
     snapshot_id: Mapped[int] = mapped_column(RowId, nullable=False)
 
@@ -119,7 +120,7 @@ class ExternalIdentifier(Base, CreatedAtMixin):
         ),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     provider: Mapped[str] = mapped_column(enums.identifier_provider, nullable=False)
     external_id: Mapped[str] = mapped_column(Text, nullable=False)
     snapshot_id: Mapped[int | None] = mapped_column(RowId)

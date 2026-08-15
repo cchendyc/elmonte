@@ -35,7 +35,7 @@ from scripts.backfill.common import (
 
 _INTRO_RE = re.compile(
     r'<p class="intro-text">\s*<strong>(?P<titles>.*?)</strong>',
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
 
 # Personal-site link is inside <ul class="social-media"> with anchor text
@@ -43,7 +43,7 @@ _INTRO_RE = re.compile(
 _WEBSITE_RE = re.compile(
     r'<a[^>]+href="(?P<href>https?://[^"]+)"[^>]*>\s*'
     r'[^<]*?(?:Personal Website|Website|Homepage)[^<]*?\s*</a>',
-    re.I,
+    re.IGNORECASE,
 )
 
 # The bio paragraph is the first substantive <p> inside the .post-content
@@ -51,9 +51,9 @@ _WEBSITE_RE = re.compile(
 # the intro-text closes first, then the bio paragraph opens.
 _POST_CONTENT_RE = re.compile(
     r'<section class="post-content">(?P<inner>.*?)</section>',
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
-_PARAGRAPH_RE = re.compile(r'<p(?![^>]*class="intro-text")[^>]*>(?P<body>.*?)</p>', re.S | re.I)
+_PARAGRAPH_RE = re.compile(r'<p(?![^>]*class="intro-text")[^>]*>(?P<body>.*?)</p>', re.DOTALL | re.IGNORECASE)
 
 
 def parse(url: str, html: str) -> ProfileExtraction:
@@ -100,7 +100,7 @@ def _normalize_title_pipes(raw: str) -> str:
 
 
 def _bio_text(fragment: str) -> str:
-    with_breaks = re.sub(r"<br\s*/?>", "\n", fragment, flags=re.I)
+    with_breaks = re.sub(r"<br\s*/?>", "\n", fragment, flags=re.IGNORECASE)
     return normalize_whitespace(strip_html(with_breaks))
 
 
@@ -109,9 +109,7 @@ def _looks_like_bio(text: str) -> bool:
         return False
     lowered = text.lower()
     bad_markers = ("phone number", "email ", "click here", "download cv")
-    if any(m in lowered for m in bad_markers):
-        return False
-    return True
+    return not any(m in lowered for m in bad_markers)
 
 
 def _plausible_personal_site(href: str) -> bool:
@@ -123,16 +121,4 @@ def _plausible_personal_site(href: str) -> bool:
     """
     if "haas.berkeley.edu/faculty/" in href:
         return False
-    if any(
-        bad in href
-        for bad in (
-            "twitter.com",
-            "facebook.com",
-            "linkedin.com",
-            "instagram.com",
-            "youtube.com",
-            "/cdn-cgi/l/email-protection",
-        )
-    ):
-        return False
-    return True
+    return not any(bad in href for bad in ("twitter.com", "facebook.com", "linkedin.com", "instagram.com", "youtube.com", "/cdn-cgi/l/email-protection"))

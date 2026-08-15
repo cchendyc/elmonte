@@ -125,6 +125,29 @@ export interface SessionState {
 export const linkKey = (a: string, b: string) => (a < b ? `${a}::${b}` : `${b}::${a}`);
 export const pageKey = (ownerId: string, groupKey: string) => `${ownerId}::${groupKey}`;
 
+/**
+ * The API returns forward-only slices.  The session must ACCUMULATE them:
+ * replacing `pages[key]` with the latest slice would silently drop the first
+ * 24 names from an open roster band on every "Load more".
+ */
+export function mergePage(existing: PeoplePage | undefined, incoming: PeoplePage): PeoplePage {
+  if (!existing) return incoming;
+  const seen = new Set(existing.items.map((item) => item.id));
+  const items = [...existing.items];
+  for (const item of incoming.items) {
+    if (seen.has(item.id)) continue;
+    seen.add(item.id);
+    items.push(item);
+  }
+  return {
+    ownerId: incoming.ownerId,
+    groupKey: incoming.groupKey,
+    offset: Math.max(existing.offset, incoming.offset),
+    total: incoming.total,
+    items,
+  };
+}
+
 const PRECEDENCE: Record<Relation, number> = {
   report: 4,
   placement: 3,
@@ -283,14 +306,16 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       };
     }
 
-    case "page":
+    case "page": {
+      const key = pageKey(action.page.ownerId, action.page.groupKey);
       return {
         ...state,
         pages: {
           ...state.pages,
-          [pageKey(action.page.ownerId, action.page.groupKey)]: action.page,
+          [key]: mergePage(state.pages[key], action.page),
         },
       };
+    }
 
     case "openGroup": {
       const existing = state.groups[action.ownerId];

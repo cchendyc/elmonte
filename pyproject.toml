@@ -1,0 +1,14 @@
+# Ruff configuration for the El Monte monorepo.
+#
+# * DTZ011: the application deliberately uses the server's local calendar date
+#   (`date.today()`) because the Postgres temporal views use CURRENT_DATE in the
+#   database session timezone, not UTC.
+# * B008: FastAPI's `Depends(...)` in argument defaults is the framework's
+#   canonical dependency-injection form; the alternative is less readable and
+#   no safer here.
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["DTZ011", "B008"]

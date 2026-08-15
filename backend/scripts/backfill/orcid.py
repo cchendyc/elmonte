@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import (
     clear_timeline_affiliations,
     insert_timeline_affiliation,

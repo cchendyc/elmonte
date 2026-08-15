@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
+from db.config import get_database_url
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-
-from db.config import get_database_url
 
 
 def _normalise_url(url: str) -> str:
@@ -34,7 +33,7 @@ _engine = create_engine(
 _SessionLocal = sessionmaker(bind=_engine, autoflush=False, autocommit=False, future=True)
 
 
-def db_session() -> Generator[Session, None, None]:
+def db_session() -> Generator[Session]:
     """FastAPI dependency: yields a scoped session, closes on exit."""
     session = _SessionLocal()
     try:

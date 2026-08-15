@@ -7,11 +7,20 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import type { ProjectionData, ProjectionPoint } from "../api/projection";
+import type {
+  ProjectionCluster,
+  ProjectionClusterEdge,
+  ProjectionData,
+  ProjectionPoint,
+} from "../api/projection";
 import { PROJECTION } from "../api/projection";
-import type { PersonCoauthorTiesData } from "../api/coauthorTies";
+import type { CoauthorTie, PersonCoauthorTiesData } from "../api/coauthorTies";
 import { PERSON_COAUTHOR_TIES } from "../api/coauthorTies";
-import { PERSPECTIVE, type PerspectiveData } from "../api/perspective";
+import {
+  PERSPECTIVE,
+  type PerspectiveAlter,
+  type PerspectiveData,
+} from "../api/perspective";
 import { groupThetas, importanceToRadius, polarToCartesian } from "../lib/perspectiveLayout";
 import {
   buildCategoryColorMaps,
@@ -44,6 +53,15 @@ interface Transform {
   ty: number;
   scale: number;
 }
+
+// Stable empties keep `useMemo` dependencies referentially constant across
+// renders while an Apollo query is loading; inline `?? []` creates a fresh
+// array on every render and makes every dependent memo re-run.
+const EMPTY_POINTS: ProjectionPoint[] = [];
+const EMPTY_CLUSTERS: ProjectionCluster[] = [];
+const EMPTY_EDGES: ProjectionClusterEdge[] = [];
+const EMPTY_COAUTHOR_TIES: CoauthorTie[] = [];
+const EMPTY_ALTERS: PerspectiveAlter[] = [];
 
 type AtlasView = "topic" | "network";
 type EdgeType = "collaboration" | "topic";
@@ -408,7 +426,7 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
   const projection =
     data?.projection ??
     (projPrevRef.current?.view === view ? projPrevRef.current.projection : undefined);
-  const rawPoints = projection?.points ?? [];
+  const rawPoints = projection?.points ?? EMPTY_POINTS;
   // H1: drop degenerate points at the data boundary — NaN coordinates or
   // impact would poison bboxOf, hulls, and radius math downstream.
   const points = useMemo(
@@ -421,8 +439,8 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
       ),
     [rawPoints],
   );
-  const clusters = projection?.clusters ?? [];
-  const edges = projection?.edges ?? [];
+  const clusters = projection?.clusters ?? EMPTY_CLUSTERS;
+  const edges = projection?.edges ?? EMPTY_EDGES;
   const runId = projection?.runId;
 
   const personFocus =
@@ -442,7 +460,9 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
   }
   const coauthorTies =
     tieData?.personCoauthorTies ??
-    (tiesFocusRef.current === personFocus ? tiePrev?.personCoauthorTies ?? [] : []);
+    (tiesFocusRef.current === personFocus
+      ? (tiePrev?.personCoauthorTies ?? EMPTY_COAUTHOR_TIES)
+      : EMPTY_COAUTHOR_TIES);
 
   const [perspectiveMode, setPerspectiveMode] = useState(false);
   const { data: perspData, error: perspError, previousData: perspPrev } = useQuery<PerspectiveData>(PERSPECTIVE, {
@@ -456,7 +476,9 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
   }
   const alters =
     perspData?.perspective.alters ??
-    (perspFocusRef.current === personFocus ? perspPrev?.perspective.alters ?? [] : []);
+    (perspFocusRef.current === personFocus
+      ? (perspPrev?.perspective.alters ?? EMPTY_ALTERS)
+      : EMPTY_ALTERS);
 
   const [colorMode, setColorMode] = useState<ScatterColorMode>(loadColorMode);
   const [showNames, setShowNames] = useState(loadShowNames);
@@ -889,7 +911,7 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
       const bFocus = personFocus != null && b.id === personFocus ? 1 : 0;
       return aFocus - bFocus;
     });
-  }, [points, isFar, personFocus, personalGraph, personalGraphActive, isNetworkMember]);
+  }, [points, isFar, personFocus, personalGraphActive, isNetworkMember]);
 
   // F4: viewport culling — filter sortedPoints by visible rect
   const visibleRect = useMemo(

@@ -19,7 +19,12 @@
     "db:migrate": "cd backend && python3 -m alembic upgrade head",
     "db:migrate:down": "cd backend && python3 -m alembic downgrade -1",
     "db:migrate:status": "cd backend && python3 -m alembic current",
-    "db:revision": "cd backend && python3 -m alembic revision --autogenerate -m"
+    "db:revision": "cd backend && python3 -m alembic revision --autogenerate -m",
+    "test:live": "python3 -m pytest backend/tests_live -q",
+    "test:e2e": "python3 -m pytest e2e -q",
+    "db:integrity": "cd backend && python3 -m scripts.admin.integrity_check",
+    "db:integrity:fix": "cd backend && python3 -m scripts.admin.integrity_check --fix",
+    "backfill:institutions": "cd backend && python3 -m scripts.backfill.openalex_institutions"
   },
   "devDependencies": {
     "concurrently": "^10.0.4"

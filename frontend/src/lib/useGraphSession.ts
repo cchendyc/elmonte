@@ -146,6 +146,7 @@ export function useGraphSession(
         dispatch({ type: "page", page });
         dispatch({ type: "openGroup", ownerId, groupKey });
       } catch (err) {
+        setError(describeError(err));
         devLogError("[graphSession] roster prefetch failed", err);
       } finally {
         dispatch({ type: "loading", id: gid, value: false });
@@ -194,13 +195,18 @@ export function useGraphSession(
       dispatch({ type: "openGroup", ownerId, groupKey: key });
       if (session.pages[pageKey(ownerId, key)]) return;
       const gid = `grp:${ownerId}:${key}`;
+      if (inFlight.current.has(gid)) return;
+      inFlight.current.add(gid);
       dispatch({ type: "loading", id: gid, value: true });
       try {
         const page = await fetchPage(ownerId, key, 0);
         dispatch({ type: "page", page });
+        setError(null);
       } catch (err) {
+        setError(describeError(err));
         devLogError("[graphSession] fetchPage failed", err);
       } finally {
+        inFlight.current.delete(gid);
         dispatch({ type: "loading", id: gid, value: false });
       }
     },
@@ -210,14 +216,20 @@ export function useGraphSession(
   const onLoadMore = useCallback(
     async (ownerId: string, key: string) => {
       const existing = session.pages[pageKey(ownerId, key)];
+      if (!existing || existing.offset >= existing.total) return;
       const bandId = `band:${ownerId}:${key}`;
+      if (inFlight.current.has(bandId)) return;
+      inFlight.current.add(bandId);
       dispatch({ type: "loading", id: bandId, value: true });
       try {
-        const page = await fetchPage(ownerId, key, existing?.offset ?? 0);
+        const page = await fetchPage(ownerId, key, existing.offset);
         dispatch({ type: "page", page });
+        setError(null);
       } catch (err) {
+        setError(describeError(err));
         devLogError("[graphSession] fetchPage failed", err);
       } finally {
+        inFlight.current.delete(bandId);
         dispatch({ type: "loading", id: bandId, value: false });
       }
     },

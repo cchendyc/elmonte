@@ -5,13 +5,10 @@ touches the session (security headers, body caps, payload validation, and
 malformed-id handling are all pre-DB).
 """
 
-import json
-
-import pytest
-from fastapi.testclient import TestClient
 
 from api.graphql.app import execute
 from api.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -28,12 +25,47 @@ def test_security_headers_present():
     assert r.headers.get("x-frame-options") == "DENY"
     assert r.headers.get("referrer-policy") == "no-referrer"
     assert "max-age=31536000" in r.headers.get("strict-transport-security", "")
+    assert r.headers.get("x-request-id")
+
+
+def test_health_checks_database_and_is_not_cacheable():
+    r = client.get("/api/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+    assert "no-store" in r.headers.get("cache-control", "")
+
+
+def test_request_id_accepts_trusted_proxy_format():
+    r = client.get("/api/health", headers={"X-Request-ID": "trace-abc-1234"})
+    assert r.status_code == 200
+    assert r.headers.get("x-request-id") == "trace-abc-1234"
+
+
+def test_cors_preflight_allows_apollo_headers():
+    """Production frontends are cross-origin; Apollo's preflight guard and the
+    request-id header must be permitted or every GraphQL POST fails."""
+    r = client.options(
+        "/api/graphql",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers":
+                "content-type, x-request-id, apollo-require-preflight",
+        },
+    )
+    assert r.status_code == 200
+    allowed = r.headers.get("access-control-allow-headers", "").lower()
+    assert "apollo-require-preflight" in allowed
+    assert "x-request-id" in allowed
 
 
 def test_security_headers_on_privacy_page():
     r = client.get("/api/privacy")
     assert r.status_code == 200
     assert r.headers.get("x-content-type-options") == "nosniff"
+    assert "text/html" in r.headers.get("content-type", "")
+    assert "<h1>Privacy Policy</h1>" in r.text
+    assert "# Privacy Policy" not in r.text
 
 
 # ---------------------------------------------------------------------------
@@ -104,12 +136,12 @@ def test_execute_missing_query():
 
 
 def test_execute_blank_query():
-    ok, result = execute({"query": "   "}, None)
+    ok, _result = execute({"query": "   "}, None)
     assert ok is False
 
 
 def test_execute_non_dict_payload():
-    ok, result = execute(["query"], None)
+    ok, _result = execute(["query"], None)
     assert ok is False
 
 

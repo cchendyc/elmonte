@@ -1,5 +1,4 @@
 import numpy as np
-
 from scripts.embed.metrics import (
     cluster_purity,
     gold_set_distances,

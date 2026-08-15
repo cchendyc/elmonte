@@ -27,8 +27,10 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import (
     resolve_berkeley_university_org_id,
+    resolve_snapshot_path,
     sql_person_is_berkeley_anchored,
 )
 from scripts.backfill.openalex import OpenAlexClient, short_id
@@ -181,8 +183,8 @@ def backfill_publication_concepts(
         work: dict[str, Any] | None = None
         snapshot_path = row.get("snapshot_path")
         if snapshot_path:
-            path = Path(str(snapshot_path))
-            if path.is_file():
+            path = resolve_snapshot_path(str(snapshot_path))
+            if path is not None and path.is_file():
                 try:
                     work = json.loads(path.read_bytes())
                     stats["snapshot_hits"] += 1

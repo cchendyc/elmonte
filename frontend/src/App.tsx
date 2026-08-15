@@ -3,10 +3,10 @@ import {
   BrowserRouter,
   Link,
   useLocation,
+  useNavigate,
   Navigate,
   Route,
   Routes,
-  useSearchParams,
   useParams,
 } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
@@ -20,14 +20,13 @@ const ExploreGraphPage = lazy(() =>
     default: m.ExploreGraphPage,
   }))
 );
+import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import { HomeGraphPage } from "./components/HomeGraphPage";
 import { InstitutionPage } from "./components/InstitutionPage";
 import { PersonProfile } from "./components/PersonProfile";
 import { SEARCH, type SearchData, type SearchVars } from "./api/queries";
-import {
-  OnboardingProvider,
-  useOnboarding,
-} from "./components/OnboardingTour";
+import { OnboardingProvider } from "./components/OnboardingTour";
+import { useOnboarding } from "./lib/onboardingContext";
 import "./App.css";
 
 function PersonRoute() {
@@ -75,13 +74,16 @@ function SearchIcon() {
 
 function AppHeader() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { startTour } = useOnboarding();
-  const [, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState("");
   // Flat list of all search options for keyboard navigation (ARIA listbox).
   const [highlighted, setHighlighted] = useState(-1);
   const debounced = useDebounced(query.trim(), 220);
-  const showDirectorySearch = location.pathname === "/";
+  // Directory search is available on every atlas route.  The /data diagnostic
+  // page has its own row filter, so the header search hides there to avoid
+  // two competing search boxes.
+  const showDirectorySearch = location.pathname !== "/data";
   const isDataPage = location.pathname === "/data";
 
   const { data, loading, error } = useQuery<SearchData, SearchVars>(SEARCH, {
@@ -93,6 +95,16 @@ function AppHeader() {
   const peopleMatches = data?.search.people ?? [];
   const orgMatches = data?.search.orgs ?? [];
   const searchOptions = [...peopleMatches, ...orgMatches];
+
+  // Results are async: a stale keyboard highlight must never point past the
+  // end of a freshly returned (shorter) result list.
+  useEffect(() => {
+    setHighlighted((current) => {
+      if (current < 0 || searchOptions.length === 0) return -1;
+      return current < searchOptions.length ? current : searchOptions.length - 1;
+    });
+  }, [searchOptions.length]);
+
   const showSearchPanel = debounced.length > 0;
   const isSearching = showSearchPanel && loading && !data;
   const showEmptyResults =
@@ -103,7 +115,9 @@ function AppHeader() {
     orgMatches.length === 0;
 
   function focusResult(id: string) {
-    setSearchParams({ focus: id });
+    // Always land on the home canvas so ?focus= is interpreted by the graph
+    // session regardless of which route the user searched from.
+    navigate(`/?focus=${encodeURIComponent(id)}`);
     setQuery("");
     setHighlighted(-1);
   }
@@ -258,6 +272,12 @@ function AppHeader() {
                       <small>
                         {hit.role ?? "Researcher"}
                         {hit.institution ? ` · ${hit.institution}` : ""}
+                        {hit.researchArea ? ` · ${hit.researchArea}` : ""}
+                        {hit.publicationCount != null
+                          ? ` · ${hit.publicationCount} paper${
+                              hit.publicationCount === 1 ? "" : "s"
+                            }`
+                          : ""}
                       </small>
                     </span>
                   </button>
@@ -357,6 +377,7 @@ export default function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || undefined}>
       <OnboardingProvider>
         <GraphShellLayout>
+          <AppErrorBoundary>
           <Suspense
             fallback={
               <div className="page-placeholder" role="status">
@@ -373,6 +394,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
+          </AppErrorBoundary>
         </GraphShellLayout>
       </OnboardingProvider>
     </BrowserRouter>

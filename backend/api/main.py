@@ -17,20 +17,24 @@ Endpoints:
 from __future__ import annotations
 
 import hashlib
+import html
+import ipaddress
 import json
 import logging
 import os
+import re
 import threading
 import time
+import uuid
 from collections import deque
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from sqlalchemy.exc import OperationalError
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 from starlette.requests import ClientDisconnect
 
@@ -48,34 +52,58 @@ logger = logging.getLogger("elmonte.api")
 class _RateLimiter:
     """Token-bucket-ish counter: allow *max_requests* each sliding *window_seconds*.
 
-    Stores a ``deque`` of Unix timestamps per client IP.  Prunes expired entries
-    on every check and deletes empty buckets, so the shared dict never grows
-    unbounded.  Thread-safe via an internal lock.
-
+    Stores a ``deque`` of Unix timestamps per client IP.  Expired entries are
+    pruned on every check for the active bucket, and a periodic whole-table
+    sweep reclaims one-off buckets (an IP that made a single request and never
+    returned otherwise stays in memory forever).  A hard bucket cap bounds the
+    damage from an address-spoofing flood while preserving availability for
+    the requests that triggered the cap.  Thread-safe via an internal lock.
     """
+
+    # Sweep the whole table every N checks.  A balance: frequent enough to
+    # reclaim one-off IPs quickly, rare enough that it is not O(n) per request.
+    _SWEEP_EVERY = 512
+    # Hard cap on tracked IPs.  In-process limiting is best-effort; when an
+    # attacker can rotate addresses freely, memory stays bounded and legitimate
+    # clients get a fresh bucket after the rare clear.
+    _MAX_BUCKETS = 100_000
 
     def __init__(self, max_requests: int, window_seconds: float = 60.0) -> None:
         self.max_requests = max_requests
         self.window = window_seconds
         self._buckets: dict[str, deque[float]] = {}
         self._lock = threading.Lock()
+        self._checks = 0
+
+    def _prune_bucket(self, ip: str, now: float) -> None:
+        """Drop timestamps that have left the sliding window."""
+        bucket = self._buckets.get(ip)
+        if bucket is None:
+            return
+        cutoff = now - self.window
+        while bucket and bucket[0] <= cutoff:
+            bucket.popleft()
+        if not bucket:
+            del self._buckets[ip]
+
+    def _sweep(self, now: float) -> None:
+        for ip in list(self._buckets):
+            self._prune_bucket(ip, now)
 
     def allow(self, ip: str) -> bool:
         with self._lock:
             now = time.time()
+            self._checks += 1
+            if self._checks % self._SWEEP_EVERY == 0:
+                self._sweep(now)
+
+            self._prune_bucket(ip, now)
             bucket = self._buckets.get(ip)
             if bucket is None:
-                self._buckets[ip] = deque([now])
-                return True
-
-            # Prune timestamps outside the window.
-            cutoff = now - self.window
-            while bucket and bucket[0] < cutoff:
-                bucket.popleft()
-
-            # Delete stale empty buckets to prevent unbounded memory growth.
-            if not bucket:
-                del self._buckets[ip]
+                if len(self._buckets) >= self._MAX_BUCKETS:
+                    # A rotated-address flood: bound memory.  This is a rare
+                    # availability reset, not an unbounded allocation.
+                    self._buckets.clear()
                 self._buckets[ip] = deque([now])
                 return True
 
@@ -91,12 +119,22 @@ def _client_ip(request: Request) -> str:
 
     The proxy *appends* the connecting IP at the end of ``X-Forwarded-For``;
     earlier entries are client-controlled and may be spoofed.  We therefore
-    take the **last** value in the chain (or ``request.client.host`` when
-    no proxy header is present).
+    take the **last syntactically valid IP** in the chain, falling back to
+    ``request.client.host`` when the header is missing or malformed.  Rejecting
+    malformed values matters: ``unknown`` or an empty tail would otherwise put
+    every request in one shared attacker-controlled bucket.
     """
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
-        return forwarded.split(",")[-1].strip()
+        for part in reversed(forwarded.split(",")):
+            candidate = part.strip().strip('"')
+            if not candidate:
+                continue
+            try:
+                ipaddress.ip_address(candidate)
+            except ValueError:
+                continue
+            return candidate
     host = request.client.host if request.client else "0.0.0.0"
     return host
 
@@ -106,6 +144,12 @@ _cv_limiter = _RateLimiter(max_requests=10, window_seconds=60.0)
 
 # 120 req / minute for GraphQL endpoints (query + explorer).
 _api_limiter = _RateLimiter(max_requests=120, window_seconds=60.0)
+
+# Health checks get their own bucket so a monitoring loop can never consume a
+# real user's GraphQL/CV quota, and vice versa.
+_health_limiter = _RateLimiter(max_requests=240, window_seconds=60.0)
+
+_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{8,128}$")
 
 
 def _cv_access_log(ip: str, public_id: str) -> None:
@@ -121,11 +165,20 @@ def _rate_limit_exceeded() -> JSONResponse:
 
 app = FastAPI(
     title="El Monte research atlas API",
-    version="0.2.0",
+    version="0.3.0",
     docs_url=None,
     redoc_url=None,
     openapi_url=None,
 )
+
+
+@app.exception_handler(OperationalError)
+async def _database_unavailable(request: Request, exc: OperationalError) -> JSONResponse:
+    """Structured 503 for any route that reaches the database directly."""
+    logger.warning("database unavailable on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        {"detail": "database unavailable"}, status_code=503
+    )
 
 def _cors_origins() -> list[str]:
     """Dev localhost plus any comma-separated origins in CORS_ORIGINS (e.g.
@@ -152,19 +205,30 @@ app.add_middleware(
     allow_origins=_cors_origins(),
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_headers=[
+        "Content-Type",
+        "X-Request-ID",
+        "Apollo-Require-Preflight",
+        "Accept",
+    ],
 )
 
 
 @app.middleware("http")
 async def _security_headers(request: Request, call_next):
-    """Hardening headers on every response (nosniff, clickjacking, referrer).
+    """Hardening headers + request correlation id on every response.
 
     `setdefault` so we never clobber explicit headers from routes or CORS.
     A strict CSP is deliberately omitted: the only HTML served is the GraphiQL
     explorer, which relies on inline scripts.
     """
+    request_id = request.headers.get("X-Request-ID", "")
+    if not _REQUEST_ID_PATTERN.fullmatch(request_id):
+        request_id = uuid.uuid4().hex
+    request.state.request_id = request_id
+
     response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "no-referrer")
@@ -173,10 +237,25 @@ async def _security_headers(request: Request, call_next):
 
 
 @app.get("/api/health")
-def health(request: Request) -> dict[str, str]:
-    if not _api_limiter.allow(_client_ip(request)):
+def health(
+    request: Request, db: Session = Depends(db_session)
+) -> dict[str, str]:
+    """Liveness + database reachability.
+
+    This is intentionally tiny (one ``SELECT 1``) so render.com and uptime
+    monitors can hit it often.  It uses a separate limiter from the GraphQL
+    endpoint.
+    """
+    if not _health_limiter.allow(_client_ip(request)):
         return _rate_limit_exceeded()
-    return {"status": "ok"}
+    try:
+        db.execute(text("SELECT 1"))
+    except OperationalError:
+        raise HTTPException(status_code=503, detail="database unavailable") from None
+    return JSONResponse(
+        {"status": "ok"},
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 _PRIVACY_PATH = Path(__file__).resolve().parents[2] / "PRIVACY.md"
@@ -184,6 +263,143 @@ _PRIVACY_PATH = Path(__file__).resolve().parents[2] / "PRIVACY.md"
 
 # 60 req / minute for the privacy policy page.
 _privacy_limiter = _RateLimiter(max_requests=10, window_seconds=60.0)
+
+
+_MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+def _render_markdown_inline(value: str) -> str:
+    """Render the small, trusted Markdown subset used by PRIVACY.md."""
+    escaped = html.escape(value)
+
+    def link_repl(match: re.Match[str]) -> str:
+        label = match.group(1)
+        url = match.group(2).strip()
+        if url.startswith(("https://", "http://")):
+            return (
+                f'<a href="{html.escape(url, quote=True)}" target="_blank" '
+                f'rel="noreferrer">{label}</a>'
+            )
+        return label
+
+    escaped = _MARKDOWN_LINK_RE.sub(link_repl, escaped)
+    escaped = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+    escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
+    return escaped
+
+
+def _render_markdown(content: str) -> str:
+    """Convert PRIVACY.md into a small, dependency-free HTML document."""
+    lines = content.splitlines()
+    parts: list[str] = [
+        "<!doctype html><html><head><meta charset=\"utf-8\">",
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+        "<title>Privacy Policy — El Monte Research Atlas</title>",
+        "<style>",
+        (
+            "body{max-width:760px;margin:0 auto;padding:32px 20px 64px;"
+            "font:16px/1.55 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
+            "color:#1f2937;background:#fff}h1{font-size:2rem;line-height:1.2}"
+        ),
+        "h2{font-size:1.35rem;margin-top:2rem}h3{font-size:1.05rem;margin-top:1.5rem}",
+        "p{margin:0.75rem 0}ul,ol{padding-left:1.4rem}li{margin:0.35rem 0}",
+        "a{color:#4338ca;text-decoration:none}a:hover{text-decoration:underline}",
+        "pre,code{font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}",
+        "pre{background:#f3f4f6;padding:14px;border-radius:8px;overflow:auto}",
+        "table{border-collapse:collapse;margin:1rem 0;width:100%}",
+        "th,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left}",
+        "th{background:#f9fafb}",
+        "</style></head><body>",
+    ]
+
+    in_code = False
+    in_list = False
+    table: list[list[str]] = []
+
+    def close_list() -> None:
+        nonlocal in_list
+        if in_list:
+            parts.append("</ul>")
+            in_list = False
+
+    def flush_table() -> None:
+        nonlocal table
+        if not table:
+            return
+        rows = "".join(
+            "<tr>"
+            + "".join(
+                (
+                    f"<th>{_render_markdown_inline(cell)}</th>"
+                    if idx == 0
+                    else f"<td>{_render_markdown_inline(cell)}</td>"
+                )
+                for idx, cell in enumerate(row)
+            )
+            + "</tr>"
+            for row in table
+        )
+        parts.append(f"<table>{rows}</table>")
+        table = []
+
+    for raw in lines:
+        line = raw.rstrip()
+        if line.strip().startswith("```"):
+            close_list()
+            flush_table()
+            if in_code:
+                parts.append("</code></pre>")
+                in_code = False
+            else:
+                parts.append("<pre><code>")
+                in_code = True
+            continue
+        if in_code:
+            parts.append(html.escape(line))
+            continue
+
+        stripped = line.strip()
+        if not stripped:
+            close_list()
+            continue
+        if stripped.startswith("|") and stripped.endswith("|"):
+            close_list()
+            cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+            if all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells):
+                continue
+            table.append(cells)
+            continue
+
+        flush_table()
+        if stripped.startswith("# "):
+            close_list()
+            parts.append(f"<h1>{_render_markdown_inline(stripped[2:])}</h1>")
+            continue
+        if stripped.startswith("## "):
+            close_list()
+            parts.append(f"<h2>{_render_markdown_inline(stripped[3:])}</h2>")
+            continue
+        if stripped.startswith("### "):
+            close_list()
+            parts.append(f"<h3>{_render_markdown_inline(stripped[4:])}</h3>")
+            continue
+        if stripped.startswith("- "):
+            if not in_list:
+                parts.append("<ul>")
+                in_list = True
+            parts.append(f"<li>{_render_markdown_inline(stripped[2:])}</li>")
+            continue
+
+        close_list()
+        parts.append(f"<p>{_render_markdown_inline(stripped)}</p>")
+
+    close_list()
+    flush_table()
+    if in_code:
+        parts.append("</code></pre>")
+    parts.append("</body></html>")
+    return "\n".join(parts)
+
 
 
 @app.get("/api/privacy")
@@ -196,18 +412,34 @@ def privacy(request: Request) -> Response:
         raise HTTPException(status_code=404, detail="privacy policy not found")
     content = _PRIVACY_PATH.read_text(encoding="utf-8")
     # Static page, but keep the TTL short so contact/deletion-instruction
-    # updates propagate within the hour rather than the day.
-    return Response(
-        content,
-        media_type="text/markdown; charset=utf-8",
+    # updates propagate within the hour rather than the day. Serve rendered
+    # HTML rather than raw Markdown text so browser visitors get a real page.
+    return HTMLResponse(
+        _render_markdown(content),
         headers={"Cache-Control": "public, max-age=3600"},
     )
+
+
+def _snapshot_roots() -> tuple[Path, ...]:
+    """Allowed filesystem roots for CV snapshots.
+
+    Relative paths are rooted at the repo.  Absolute snapshot paths are only
+    accepted when an operator explicitly configured ``ELMONTE_DATA_ROOT``
+    (useful when raw snapshots live on a mounted volume); anything else
+    outside the repository is treated as missing.
+    """
+    roots = [_REPO_ROOT]
+    configured = os.environ.get("ELMONTE_DATA_ROOT", "").strip()
+    if configured:
+        roots.append(Path(configured).resolve())
+    return tuple(roots)
 
 
 def _snapshot_file_or_404(raw: str) -> Path:
     """Resolve a stored snapshot path, refusing traversal escapes.
 
-    Stored paths are either absolute or relative to the repo root (see
+    Stored paths are either relative to the repo root or, when
+    ``ELMONTE_DATA_ROOT`` is configured, under that explicit data root (see
     scripts/backfill/common.py).  ``..`` segments and URL-ish strings are
     rejected outright; anything else must exist as a regular file.
     """
@@ -217,9 +449,8 @@ def _snapshot_file_or_404(raw: str) -> Path:
     if not candidate.is_absolute():
         candidate = _REPO_ROOT / candidate
     resolved = candidate.resolve()
-    if not resolved.is_relative_to(_REPO_ROOT.resolve()):
-        raise HTTPException(status_code=404, detail="cv file missing")
-    if not resolved.exists() or not resolved.is_file():
+    allowed = any(resolved.is_relative_to(root) for root in _snapshot_roots())
+    if not allowed or not resolved.exists() or not resolved.is_file():
         raise HTTPException(status_code=404, detail="cv file missing")
     return resolved
 
@@ -261,7 +492,12 @@ def person_cv(public_id: str, request: Request, db: Session = Depends(db_session
     path = _snapshot_file_or_404(snap["local_path"])
 
     media_type = "application/pdf" if path.suffix.lower() == ".pdf" else "text/html"
-    return FileResponse(path, media_type=media_type, filename=path.name)
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=path.name,
+        headers={"Cache-Control": "private, no-store"},
+    )
 
 
 @app.get("/api/graphql", response_class=HTMLResponse)
@@ -284,7 +520,8 @@ async def _read_json_body(request: Request) -> dict | None:
     """Read + parse a JSON body, capped at :data:`MAX_BODY_BYTES`.
 
     Returns ``None`` when the cap is exceeded (caller answers 413); raises
-    :class:`json.JSONDecodeError` for malformed JSON.
+    :class:`json.JSONDecodeError` for malformed JSON and
+    :class:`UnicodeDecodeError` for non-UTF-8 bodies.
     """
     chunks: list[bytes] = []
     total = 0
@@ -318,7 +555,7 @@ async def graphql_endpoint(
         payload = await _read_json_body(request)
     except ClientDisconnect:
         return Response(status_code=499)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return JSONResponse(
             {"detail": "request body is not valid JSON"}, status_code=400
         )
@@ -341,4 +578,8 @@ async def graphql_endpoint(
         return JSONResponse(
             {"errors": [{"message": "database unavailable"}]}, status_code=503
         )
-    return JSONResponse(result, status_code=200 if success else 400)
+    response = JSONResponse(result, status_code=200 if success else 400)
+    # GraphQL results contain person-level data; never let a shared cache keep
+    # them.  Browsers still cache per-tab in memory, but no intermediary may.
+    response.headers["Cache-Control"] = "no-store"
+    return response

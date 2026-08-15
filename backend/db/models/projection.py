@@ -27,9 +27,12 @@ class EmbeddingRun(Base, CreatedAtMixin):
     __tablename__ = "embedding_runs"
     __table_args__ = (
         CheckConstraint("raw_dim > 0", name="embedding_runs_dim_positive"),
-        # `embedding_runs_one_active` — a partial UNIQUE INDEX over is_active
-        # WHERE is_active — lives in schema.sql / the migration. No expression
-        # for it here; SQLAlchemy doesn't emit partial unique indexes anyway.
+        Index(
+            "embedding_runs_one_active",
+            "is_active",
+            unique=True,
+            postgresql_where=text("is_active"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
@@ -57,6 +60,8 @@ class PersonProjection2D(Base):
     view: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'topic'"))
     x: Mapped[float] = mapped_column(Float, nullable=False)
     y: Mapped[float] = mapped_column(Float, nullable=False)
+    # Kept for backward compatibility with the original scatter color mode.
+    similarity_group: Mapped[int | None] = mapped_column(SmallInteger)
     cluster_id: Mapped[int | None] = mapped_column(SmallInteger)
 
 

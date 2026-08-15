@@ -21,9 +21,9 @@ import re
 import sys
 import urllib.parse
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -31,6 +31,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import (
     PoliteFetcher,
     upsert_external_identifier,
@@ -93,7 +94,7 @@ def _fetch_json(fetcher: Fetcher, url: str) -> dict:
 def _parse_princeton_people(html: str) -> list[RosterEntry]:
     entries: list[RosterEntry] = []
     for block in re.findall(
-        r'<div class="person">(.*?)</div>\s*</div>\s*</div>', html, re.S
+        r'<div class="person">(.*?)</div>\s*</div>\s*</div>', html, re.DOTALL
     ):
         name_m = re.search(r"<h3>([^<]+)</h3>", block)
         if not name_m:
@@ -125,7 +126,7 @@ def _fetch_mit(fetcher: Fetcher) -> list[RosterEntry]:
         title_m = re.search(
             r'class="hs-font-lead field-hs-person-title[^"]*">.*?<div>\s*([^<]+?)\s*</div>',
             page,
-            re.S | re.I,
+            re.DOTALL | re.IGNORECASE,
         )
         name_m = re.search(r"<title>([^|<]+)", page)
         display = name_m.group(1).strip() if name_m else slug.replace("-", " ").title()
@@ -152,7 +153,7 @@ def _fetch_yale(fetcher: Fetcher) -> list[RosterEntry]:
         "people",
     }
     slugs: list[str] = []
-    for page in range(0, 20):
+    for page in range(20):
         status, body, _ = fetcher.fetch(f"{base}/people/faculty?page={page}")
         if status >= 400:
             raise RuntimeError(f"Yale faculty directory HTTP {status}")
@@ -178,7 +179,7 @@ def _fetch_yale(fetcher: Fetcher) -> list[RosterEntry]:
         title_m = re.search(
             r'class="hs-font-lead field-hs-person-title[^"]*">.*?<div>\s*([^<]+?)\s*</div>',
             page,
-            re.S | re.I,
+            re.DOTALL | re.IGNORECASE,
         )
         name_m = re.search(r"<title>([^|<]+)", page)
         display = name_m.group(1).strip() if name_m else slug.replace("-", " ").title()
@@ -631,16 +632,15 @@ def ingest_school(
         else:
             stats["people_matched"] += 1
 
-        if entry.profile_url:
-            if upsert_external_identifier(
-                session,
-                provider="official_url",
-                external_id=entry.profile_url,
-                person_id=person_id,
-                snapshot_id=snapshot_id,
-            ):
-                stats["official_urls_linked"] += 1
-                url_map[entry.profile_url] = person_id
+        if entry.profile_url and upsert_external_identifier(
+            session,
+            provider="official_url",
+            external_id=entry.profile_url,
+            person_id=person_id,
+            snapshot_id=snapshot_id,
+        ):
+            stats["official_urls_linked"] += 1
+            url_map[entry.profile_url] = person_id
 
         aff_status, _aff_id = ensure_roster_membership(
             session,

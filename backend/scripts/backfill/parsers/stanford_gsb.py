@@ -32,16 +32,16 @@ from scripts.backfill.common import (
 _TITLE_ROW_RE = re.compile(
     r'<div\s+class="c-node-faculty__(?:endowed-title|jaorhfp-title)[^"]*"[^>]*>\s*'
     r"(?P<t>[^<]+?)\s*</div>",
-    re.I,
+    re.IGNORECASE,
 )
 
 _META_DESC_RE = re.compile(
-    r'<meta\s+name="description"\s+content="([^"]+)"', re.I
+    r'<meta\s+name="description"\s+content="([^"]+)"', re.IGNORECASE
 )
 
 _BIO_RE = re.compile(
     r'<div\s+class="bio-content[^"]*"[^>]*>(?P<inner>.*?)</div>\s*</div>',
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
 
 # Long shot: some GSB pages carry a Google Scholar or personal-site link in
@@ -49,7 +49,7 @@ _BIO_RE = re.compile(
 _EXTERNAL_LINK_RE = re.compile(
     r'<a[^>]+href="(?P<href>https?://[^"]+)"[^>]*>\s*'
     r"[^<]*?(?:Personal Website|Homepage|Faculty Website)[^<]*?\s*</a>",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -93,8 +93,8 @@ def parse(url: str, html: str) -> ProfileExtraction:
 
 
 def _bio_text(fragment: str) -> str:
-    with_breaks = re.sub(r"</p\s*>", "\n\n", fragment, flags=re.I)
-    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.I)
+    with_breaks = re.sub(r"</p\s*>", "\n\n", fragment, flags=re.IGNORECASE)
+    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.IGNORECASE)
     return normalize_whitespace(strip_html(with_breaks))
 
 

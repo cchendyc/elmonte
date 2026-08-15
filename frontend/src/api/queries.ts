@@ -19,6 +19,10 @@ export const SEARCH = gql`
         label
         role
         institution
+        orcid
+        researchArea
+        publicationCount
+        lastPublicationYear
       }
       orgs {
         id
@@ -91,6 +95,12 @@ export const PERSON = gql`
         isPrimary
         startsAt
         endsAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
       }
       publications {
         id
@@ -98,6 +108,8 @@ export const PERSON = gql`
         year
         citedByCount
         authorPosition
+        doi
+        venue
       }
       closestPeople {
         id
@@ -106,6 +118,145 @@ export const PERSON = gql`
         institution
         relation
         detail
+      }
+      awards {
+        name
+        awardedAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
+      }
+      grants {
+        title
+        funder
+        role
+        awardNumber
+        amount
+        currency
+        startsAt
+        endsAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
+      }
+      personTopics {
+        displayName
+        score
+        worksCount
+      }
+      personConcepts {
+        displayName
+        score
+        rank
+      }
+    }
+  }
+`;
+
+export const PERSON_EXPORT = gql`
+  query PersonExport($personId: ID!) {
+    personExport(personId: $personId) {
+      id
+      label
+      firstname
+      middlename
+      lastname
+      biography
+      homepageUrl
+      cvUrl
+      role
+      institution
+      aliases
+      externalIdentifiers {
+        provider
+        externalId
+      }
+      careerTimeline {
+        title
+        organization
+        affiliationKind
+        positionRank
+        isPrimary
+        startsAt
+        endsAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
+      }
+      publications {
+        id
+        title
+        year
+        citedByCount
+        authorPosition
+        doi
+        venue
+      }
+      closestPeople {
+        id
+        label
+        role
+        institution
+        relation
+        detail
+      }
+      personTopics {
+        displayName
+        score
+        worksCount
+      }
+      personConcepts {
+        displayName
+        score
+        rank
+      }
+      awards {
+        name
+        awardedAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
+      }
+      grants {
+        title
+        funder
+        role
+        awardNumber
+        amount
+        currency
+        startsAt
+        endsAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
+      }
+      personRelationships {
+        type
+        otherPersonId
+        otherPersonLabel
+        startsAt
+        endsAt
+        verificationStatus
+        sources {
+          label
+          url
+          sourceKind
+        }
       }
     }
   }
@@ -118,6 +269,8 @@ export const UNIVERSITIES = gql`
       label
       orgKind
       sublabel
+      childCount
+      rosterCount
     }
   }
 `;
@@ -129,6 +282,45 @@ export const ORG_CHILDREN = gql`
       label
       orgKind
       sublabel
+      childCount
+      rosterCount
+    }
+  }
+`;
+
+export const ORG_PROFILE = gql`
+  query OrgProfile($id: ID!, $on: Date) {
+    org(id: $id, on: $on) {
+      id
+      label
+      name
+      orgKind
+      sublabel
+      country
+      homepageUrl
+      description
+      parent {
+        id
+        label
+        orgKind
+        sublabel
+        childCount
+        rosterCount
+      }
+      children {
+        id
+        label
+        orgKind
+        sublabel
+        childCount
+        rosterCount
+      }
+      rosterCount
+      subtreePeopleCount
+      externalIdentifiers {
+        provider
+        externalId
+      }
     }
   }
 `;
@@ -171,6 +363,10 @@ export interface SearchPersonHit {
   label: string;
   role: string | null;
   institution: string | null;
+  orcid: string | null;
+  researchArea: string | null;
+  publicationCount: number | null;
+  lastPublicationYear: number | null;
 }
 
 export interface SearchOrgHit {
@@ -211,6 +407,14 @@ export interface FetchPageVars {
   on?: string;
 }
 
+export type VerificationStatus = "verified" | "unverified" | "disputed";
+
+export interface EvidenceSource {
+  label: string | null;
+  url: string;
+  sourceKind: string;
+}
+
 export interface CareerEntry {
   title: string | null;
   organization: string;
@@ -219,6 +423,8 @@ export interface CareerEntry {
   isPrimary: boolean;
   startsAt: string | null;
   endsAt: string | null;
+  verificationStatus: VerificationStatus;
+  sources: EvidenceSource[];
 }
 
 export interface PersonPublication {
@@ -227,6 +433,40 @@ export interface PersonPublication {
   year: number;
   citedByCount: number | null;
   authorPosition: number;
+  doi: string | null;
+  venue: string | null;
+}
+
+export interface PersonAward {
+  name: string;
+  awardedAt: string | null;
+  verificationStatus: VerificationStatus;
+  sources: EvidenceSource[];
+}
+
+export interface PersonGrant {
+  title: string;
+  funder: string;
+  role: string;
+  awardNumber: string | null;
+  amount: number | null;
+  currency: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  verificationStatus: VerificationStatus;
+  sources: EvidenceSource[];
+}
+
+export interface PersonTopic {
+  displayName: string;
+  score: number;
+  worksCount: number;
+}
+
+export interface PersonConcept {
+  displayName: string;
+  score: number | null;
+  rank: number | null;
 }
 
 export interface ClosestPerson {
@@ -250,6 +490,10 @@ export interface PersonProfile {
   careerTimeline: CareerEntry[];
   publications: PersonPublication[];
   closestPeople: ClosestPerson[];
+  awards: PersonAward[];
+  grants: PersonGrant[];
+  personTopics: PersonTopic[];
+  personConcepts: PersonConcept[];
 }
 
 export interface PersonData {
@@ -266,6 +510,38 @@ export interface OrgUnit {
   label: string;
   orgKind: string;
   sublabel: string | null;
+  childCount?: number | null;
+  rosterCount?: number | null;
+}
+
+export interface OrgIdentifier {
+  provider: string;
+  externalId: string;
+}
+
+export interface OrgProfile {
+  id: string;
+  label: string;
+  name: string;
+  orgKind: string;
+  sublabel: string | null;
+  country: string | null;
+  homepageUrl: string | null;
+  description: string | null;
+  parent: OrgUnit | null;
+  children: OrgUnit[];
+  rosterCount: number;
+  subtreePeopleCount: number;
+  externalIdentifiers: OrgIdentifier[];
+}
+
+export interface OrgProfileData {
+  org: OrgProfile | null;
+}
+
+export interface OrgProfileVars {
+  id: string;
+  on?: string;
 }
 
 export interface UniversitiesData {

@@ -17,21 +17,23 @@ Design principles
 from __future__ import annotations
 
 import hashlib
+import ipaddress
+import os
 import re
 import time
+import urllib.error
+import urllib.request
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 from urllib.parse import urlparse
 
-import urllib.request
-import urllib.error
-
+from db.config import load_dotenv
+from db.models.enums import POSITION_RANK_VALUES
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
-from db.models.enums import POSITION_RANK_VALUES
 
 # backend/scripts/backfill/common.py -> parents[3] is the repo root.  The
 # physical files land there even when the scripts run from `backend/`; the
@@ -41,10 +43,18 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 RAW_DIR = REPO_ROOT / "data" / "ingest" / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
-USER_AGENT = "elmonte-backfill/0.1 (research directory; contact: chendyu@berkeley.edu)"
+load_dotenv()
+_CONTACT_EMAIL = os.environ.get("OPENALEX_CONTACT_EMAIL", "").strip()
+USER_AGENT = (
+    f"elmonte-backfill/0.1 (research directory; contact: {_CONTACT_EMAIL})"
+    if _CONTACT_EMAIL
+    else "elmonte-backfill/0.1 (research directory)"
+)
 DEFAULT_TIMEOUT = 20.0
 MIN_HOST_INTERVAL = 1.1  # seconds between requests to the same host
 MAX_CV_TITLE_LEN = 180
+MAX_FETCH_BYTES = 64 * 1024 * 1024  # snapshots should never approach this
+MAX_FETCH_REDIRECTS = 5
 
 
 # --- Data shapes ------------------------------------------------------------
@@ -98,6 +108,80 @@ class CvAffiliationCandidate:
 # --- Fetcher ----------------------------------------------------------------
 
 
+def _url_error(url: str, reason: str) -> ValueError:
+    return ValueError(f"refusing to fetch {url!r}: {reason}")
+
+
+def _ip_is_public(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return not (
+        addr.is_private
+        or addr.is_loopback
+        or addr.is_link_local
+        or addr.is_reserved
+        or addr.is_multicast
+        or addr.is_unspecified
+    )
+
+
+def validate_public_http_url(url: str) -> None:
+    """Reject non-http(s) URLs and literal private/loopback/link-local hosts.
+
+    Pipeline URLs come from database rows, and governance submissions will
+    eventually add user-controlled URLs.  This is the first SSRF boundary;
+    redirect targets are re-checked by :class:`PoliteFetcher`'s redirect
+    handler before they are fetched.
+    """
+    if not isinstance(url, str):
+        raise _url_error(str(url), "URL must be a string")
+    if any(ch in url for ch in "\r\n\t"):
+        raise _url_error(url, "URL contains control characters")
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise _url_error(url, "only http/https URLs are allowed")
+    if not parsed.hostname:
+        raise _url_error(url, "URL has no host")
+    if parsed.username is not None or parsed.password is not None:
+        raise _url_error(url, "embedded credentials are not allowed")
+    if parsed.port is not None and not (0 < parsed.port < 65536):
+        raise _url_error(url, f"invalid port {parsed.port}")
+    try:
+        addr = ipaddress.ip_address(parsed.hostname)
+    except ValueError:
+        return  # a DNS name; redirect targets are re-validated by the fetcher
+    if not _ip_is_public(addr):
+        raise _url_error(url, "private or reserved host is not allowed")
+
+
+class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Redirect handler that re-runs the SSRF validator on every hop."""
+
+    def __init__(self, max_redirects: int = MAX_FETCH_REDIRECTS) -> None:
+        super().__init__()
+        self.max_redirects = max_redirects
+        self.redirects = 0
+
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> urllib.request.Request | None:
+        if self.redirects >= self.max_redirects:
+            raise ValueError(
+                f"too many redirects while fetching {req.full_url!r} "
+                f"(max {self.max_redirects})"
+            )
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is None:
+            return None
+        validate_public_http_url(new_req.full_url)
+        self.redirects += 1
+        return new_req
+
+
 class PoliteFetcher:
     """Simple synchronous HTTP fetcher with per-host throttling.
 
@@ -111,10 +195,12 @@ class PoliteFetcher:
         user_agent: str = USER_AGENT,
         min_interval: float = MIN_HOST_INTERVAL,
         timeout: float = DEFAULT_TIMEOUT,
+        max_body_bytes: int = MAX_FETCH_BYTES,
     ) -> None:
         self.user_agent = user_agent
         self.min_interval = min_interval
         self.timeout = timeout
+        self.max_body_bytes = max_body_bytes
         self._last_hit: dict[str, float] = {}
 
     def _wait(self, host: str) -> None:
@@ -129,9 +215,10 @@ class PoliteFetcher:
         """Fetch `url` and return (status, body, headers).
 
         Raises on transport errors so the orchestrator can decide whether to
-        retry, skip, or abort. Status codes >= 400 are returned as-is so we
+        retry, skip, or abort.  Status codes >= 400 are returned as-is so we
         can still record the snapshot with the failure status.
         """
+        validate_public_http_url(url)
         host = urlparse(url).netloc
         self._wait(host)
         headers = {
@@ -143,13 +230,22 @@ class PoliteFetcher:
         else:
             headers["Accept"] = "text/html,application/xhtml+xml"
         req = urllib.request.Request(url, headers=headers)
+        opener = urllib.request.build_opener(SafeRedirectHandler())
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                body = resp.read()
+            with opener.open(req, timeout=self.timeout) as resp:
+                body = resp.read(self.max_body_bytes + 1)
+                if len(body) > self.max_body_bytes:
+                    raise ValueError(
+                        f"response body exceeds {self.max_body_bytes} bytes"
+                    )
                 status = int(resp.status)
                 headers = {k.lower(): v for k, v in resp.headers.items()}
         except urllib.error.HTTPError as err:
-            body = err.read() or b""
+            body = err.read(self.max_body_bytes + 1) or b""
+            if len(body) > self.max_body_bytes:
+                raise ValueError(
+                    f"response body exceeds {self.max_body_bytes} bytes"
+                ) from err
             status = int(err.code)
             headers = {k.lower(): v for k, v in err.headers.items()} if err.headers else {}
         finally:
@@ -215,7 +311,7 @@ def write_snapshot(
     days = ttl_days if ttl_days is not None else snapshot_expiry(source_kind)
     expires_at = None
     if days is not None:
-        expires_at = datetime.now(timezone.utc) + timedelta(days=days)
+        expires_at = datetime.now(UTC) + timedelta(days=days)
 
     row = session.execute(
         text(
@@ -238,6 +334,31 @@ def write_snapshot(
     return int(row)
 
 
+def resolve_snapshot_path(local_path: str | None) -> Path | None:
+    """Resolve a stored ``local_path`` against the repo root.
+
+    ``write_snapshot`` stores paths relative to the repo root, but scripts are
+    documented to run from ``backend/``.  Resolving here keeps every loader and
+    cleanup job correct regardless of the caller's cwd.
+
+    Returns ``None`` for empty values and for paths that escape the repo root
+    (absolute external paths, symlinks out of the tree, or ``..`` segments).
+    The database is trusted, but a bad row must fail closed rather than hand a
+    pipeline an arbitrary filesystem path.
+    """
+    if not local_path:
+        return None
+    path = Path(local_path)
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    try:
+        resolved = path.resolve()
+        resolved.relative_to(REPO_ROOT.resolve())
+    except (OSError, ValueError):
+        return None
+    return resolved
+
+
 def load_snapshot_body(session: Session, snapshot_id: int) -> tuple[str, str] | None:
     """Return (url, html) for a snapshot if the local HTML file still exists."""
     row = session.execute(
@@ -248,8 +369,8 @@ def load_snapshot_body(session: Session, snapshot_id: int) -> tuple[str, str] | 
     ).mappings().first()
     if row is None or not row["local_path"]:
         return None
-    path = Path(row["local_path"])
-    if not path.exists():
+    path = resolve_snapshot_path(row["local_path"])
+    if path is None or not path.is_file():
         return None
     return row["source_url"], path.read_text(errors="replace")
 
@@ -262,8 +383,8 @@ def load_snapshot_bytes(session: Session, snapshot_id: int) -> tuple[str, bytes]
     ).mappings().first()
     if row is None or not row["local_path"]:
         return None
-    path = Path(row["local_path"])
-    if not path.exists():
+    path = resolve_snapshot_path(row["local_path"])
+    if path is None or not path.is_file():
         return None
     return row["source_url"], path.read_bytes()
 
@@ -526,11 +647,11 @@ def clear_cv_affiliations(session: Session, person_id: int) -> int:
 
 
 def utc_year_start(year: int) -> datetime:
-    return datetime(year, 1, 1, tzinfo=timezone.utc)
+    return datetime(year, 1, 1, tzinfo=UTC)
 
 
 def utc_year_end(year: int) -> datetime:
-    return datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+    return datetime(year, 12, 31, 23, 59, 59, tzinfo=UTC)
 
 
 # --- Fact writers -----------------------------------------------------------
@@ -849,9 +970,7 @@ def is_displayable_publication(raw: str) -> bool:
     if is_junk_publication_title(raw):
         return False
     title = clean_publication_title(raw).lower()
-    if title.startswith("replication data for:"):
-        return False
-    return True
+    return not title.startswith("replication data for:")
 
 
 def should_skip_openalex_work(work: dict[str, Any]) -> bool:
@@ -877,9 +996,7 @@ def should_skip_openalex_work(work: dict[str, Any]) -> bool:
     ):
         # Keep dataset rows that will dedupe onto the parent paper title.
         return False
-    if work_type == "dataset" and is_junk_publication_title(title):
-        return True
-    return False
+    return bool(work_type == "dataset" and is_junk_publication_title(title))
 
 
 def resolve_berkeley_university_org_id(session: Session) -> int:
@@ -925,11 +1042,24 @@ def sql_person_is_berkeley_anchored(person_id_sql: str) -> str:
 
 def canonicalize_orcid(raw: str) -> str | None:
     """Return a bare `0000-0000-0000-0000` id, or None if it doesn't look
-    like a valid ORCID. Accepts URLs and various punctuation."""
+    like a valid ORCID. Accepts URLs and various punctuation.
+
+    The ORCID check digit is validated here: a typo or OCR artifact should
+    fail ingestion instead of being linked as a person's identity backbone.
+    """
     import re
 
-    m = re.search(r"(\d{4}-\d{4}-\d{4}-\d{3}[\dX])", raw)
-    return m.group(1) if m else None
+    m = re.search(r"(\d{4}-\d{4}-\d{4}-\d{3}[\dX])", raw, re.IGNORECASE)
+    if m is None:
+        return None
+    value = m.group(1).upper()
+    digits = value.replace("-", "")[:-1]
+    total = 0
+    for digit in digits:
+        total = (total + int(digit)) * 2
+    result = (12 - (total % 11)) % 11
+    check = "X" if result == 10 else str(result)
+    return value if value[-1] == check else None
 
 
 # Force `Any` import to keep type-only usage explicit and avoid linter noise

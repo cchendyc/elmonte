@@ -66,7 +66,7 @@ to remove a person and all associated data from the database.
 
 - **Access** — you may export all data held about you using the `personExport` GraphQL query (GDPR Art. 20 portability).
 - **Erasure** — you may request deletion of your records via the admin deletion script described above.
-- **Contact** — for privacy inquiries, contact: [chendyu@berkeley.edu](mailto:chendyu@berkeley.edu)
+- **Contact** — for privacy inquiries, open an issue in the repository issue tracker. No personal email address is published with the project.
 
 ## Third-Party Attribution
 

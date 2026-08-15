@@ -1,21 +1,20 @@
 """Tests for api/id_codec.py — round-trip, legacy compat, salt isolation."""
 
 import pytest
-
-from api.id_codec import _obfuscate, _deobfuscate, decode, encode
+from api.id_codec import _obfuscate, decode, encode
 
 
 class TestRoundTrip:
     """encode → decode must recover the original (kind, row_id) for every id."""
 
     def test_person_round_trip(self):
-        for row_id in range(0, 1001):
+        for row_id in range(1001):
             kind, decoded_id = decode(encode("person", row_id))
             assert kind == "person"
             assert decoded_id == row_id
 
     def test_org_round_trip(self):
-        for row_id in range(0, 1001):
+        for row_id in range(1001):
             kind, decoded_id = decode(encode("org", row_id))
             assert kind == "org"
             assert decoded_id == row_id
@@ -23,7 +22,7 @@ class TestRoundTrip:
     def test_large_ids(self):
         """BIGINT-range ids must round-trip correctly."""
         for row_id in (2**31 - 1, 2**31, 2**32, 2**48, 2**62, 2**63 - 1):
-            kind, decoded_id = decode(encode("person", row_id))
+            _kind, decoded_id = decode(encode("person", row_id))
             assert decoded_id == row_id
 
     def test_zero(self):
@@ -84,7 +83,6 @@ class TestObfuscationProperties:
         # This is fine — decode() handles the ambiguity via digit check.
         for row_id in range(10):
             token = encode("person", row_id)
-            suffix = token.split(":", 1)[1]
             # Decode must give the correct round-trip regardless.
             assert decode(token) == ("person", row_id)
 
@@ -109,7 +107,7 @@ class TestSaltIsolation:
 
     def test_round_trip_with_custom_salt(self):
         """encode → decode with the same explicit salt must recover the original."""
-        for row_id in range(0, 100):
+        for row_id in range(100):
             token = encode("person", row_id, salt="custom-roundtrip")
             kind, decoded = decode(token, salt="custom-roundtrip")
             assert kind == "person"
@@ -118,7 +116,7 @@ class TestSaltIsolation:
     def test_cross_salt_decode_fails_or_differs(self):
         """Decoding with the wrong salt should not recover the original id."""
         token = encode("person", 999, salt="salt-alpha")
-        kind, decoded = decode(token, salt="salt-beta")
+        _kind, decoded = decode(token, salt="salt-beta")
         # Decoding with wrong salt won't raise (it's valid base36) but will
         # produce a different row_id.
         assert decoded != 999, (

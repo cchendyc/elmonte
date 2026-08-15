@@ -19,7 +19,6 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-
 revision = "07966a575e9a"
 down_revision = "f835c16a408e"
 branch_labels = None

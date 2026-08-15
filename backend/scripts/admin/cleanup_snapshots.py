@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import text
@@ -16,6 +14,7 @@ from api.deps import _SessionLocal
 # Repo root (backend/scripts/admin/ -> parents[3]) — snapshot files physically
 # live at repo-root/data/ingest/raw even when run from backend/.
 RAW_DIR = Path(__file__).resolve().parents[3] / "data" / "ingest" / "raw"
+REPO_ROOT = RAW_DIR.parents[1]
 
 
 def _protected_snapshot_ids(session: Session) -> set[int]:
@@ -62,7 +61,10 @@ def _remove_local_files(local_paths: list[str]) -> tuple[int, int]:
         if not lp:
             skipped += 1
             continue
-        p = Path(lp).resolve()
+        p = Path(lp)
+        if not p.is_absolute():
+            p = REPO_ROOT / p
+        p = p.resolve()
         # Safety: only remove files inside the raw directory.
         try:
             p.relative_to(raw_dir)

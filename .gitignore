@@ -16,6 +16,8 @@ dist
 dist-ssr
 *.local
 data/ingest/raw/*
+data/ingest/reports/*
+/atlas-topic-view.png
 
 # Editor directories and files
 .vscode/*

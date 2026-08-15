@@ -5,13 +5,12 @@ from __future__ import annotations
 from datetime import date
 from typing import Any
 
+from api.id_codec import encode
+from api.services.orgs import _org_node, _org_sublabel
+from db.models import Organization, OrgRelationship
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from api.id_codec import encode
-
-from api.services.orgs import _org_node, _org_sublabel
-from db.models import Organization, OrgRelationship
 
 def _parent_of(session: Session, org_id: int, on: date) -> Organization | None:
     return session.execute(
@@ -23,6 +22,12 @@ def _parent_of(session: Session, org_id: int, on: date) -> Organization | None:
             text("org_relationships.validity @> :as_of"),
         )
         .params(as_of=on)
+        .order_by(
+            text(
+                "org_relationships.starts_at DESC NULLS LAST, "
+                "org_relationships.id DESC"
+            )
+        )
         .limit(1)
     ).scalar_one_or_none()
 def _children_of(session: Session, org_id: int, on: date) -> list[Organization]:
@@ -40,30 +45,66 @@ def _children_of(session: Session, org_id: int, on: date) -> list[Organization]:
         ).scalars()
     )
 def _institution_of(session: Session, org_id: int, on: date) -> Organization | None:
-    """University ancestor via the precomputed org_tree_current ancestor path.
+    """Nearest university ancestor as of ``on``.
 
-    (The matview bakes in the current date, so `on` is only kept for call
-    compatibility — see the org_tree_current migration note.)
+    Today's path uses the precomputed ``org_tree_current`` matview (fast path
+    for the live map/profile).  Historical dates walk the temporal
+    ``org_relationships`` edges directly because the matview bakes in
+    CURRENT_DATE and cannot answer as-of queries.
     """
     org = session.get(Organization, org_id)
     if org is None:
         return None
     if org.kind == "university":
         return org
+
+    if on == date.today():
+        return session.execute(
+            select(Organization).from_statement(
+                text(
+                    """
+                    SELECT organizations.*
+                    FROM org_tree_current t
+                    JOIN organizations ON organizations.id = ANY(t.ancestor_ids)
+                    WHERE t.organization_id = :oid
+                      AND organizations.kind = 'university'
+                    ORDER BY array_position(t.ancestor_ids, organizations.id)
+                    LIMIT 1
+                    """
+                )
+            ),
+            {"oid": org_id},
+        ).scalar_one_or_none()
+
     return session.execute(
         select(Organization).from_statement(
             text(
                 """
+                WITH RECURSIVE walk AS (
+                  SELECT o.id, o.kind, 0 AS depth, ARRAY[o.id] AS path
+                  FROM organizations o
+                  WHERE o.id = :oid
+
+                  UNION ALL
+
+                  SELECT p.id, p.kind, w.depth + 1, w.path || p.id
+                  FROM walk w
+                  JOIN org_relationships r ON r.child_org_id = w.id
+                    AND r.relationship_type = 'primary'
+                    AND r.validity @> :as_of
+                  JOIN organizations p ON p.id = r.parent_org_id
+                  WHERE NOT p.id = ANY(w.path)
+                )
                 SELECT organizations.*
-                FROM org_tree_current t
-                JOIN organizations ON organizations.id = ANY(t.ancestor_ids)
-                WHERE t.organization_id = :oid
-                  AND organizations.kind = 'university'
+                FROM walk
+                JOIN organizations ON organizations.id = walk.id
+                WHERE walk.kind = 'university'
+                ORDER BY walk.depth
                 LIMIT 1
                 """
             )
         ),
-        {"oid": org_id},
+        {"oid": org_id, "as_of": on},
     ).scalar_one_or_none()
 
 
@@ -114,6 +155,79 @@ def _roster_count(session: Session, org_id: int, on: date) -> int:
             {"oid": org_id, "as_of": on},
         ).scalar_one()
     )
+def _subtree_people_count(session: Session, org_id: int, on: date | None = None) -> int:
+    """Total chart-anchored people in an org and all its descendants as of ``on``.
+
+    Today uses the precomputed ``org_tree_current`` matview (fast path).
+    Historical dates cannot use that matview because it bakes in
+    CURRENT_DATE, so the same tree is walked explicitly against
+    ``org_relationships`` / ``affiliation_org_assignments`` and counted
+    exactly for the requested date.
+    """
+    as_of = on or date.today()
+    if as_of == date.today():
+        row = session.execute(
+            text(
+                "SELECT subtree_person_count FROM org_tree_current "
+                "WHERE organization_id = :oid"
+            ),
+            {"oid": org_id},
+        ).mappings().first()
+        return int(row["subtree_person_count"]) if row else 0
+
+    row = session.execute(
+        text(
+            """
+            WITH RECURSIVE current_edges AS (
+              SELECT child_org_id, parent_org_id
+              FROM org_relationships
+              WHERE relationship_type = 'primary'
+                AND validity @> :as_of
+            ),
+            subtree AS (
+              SELECT CAST(:oid AS BIGINT) AS organization_id,
+                     ARRAY[CAST(:oid AS BIGINT)] AS path
+              UNION ALL
+              SELECT e.child_org_id, s.path || e.child_org_id
+              FROM subtree s
+              JOIN current_edges e ON e.parent_org_id = s.organization_id
+              WHERE NOT e.child_org_id = ANY(s.path)
+            )
+            SELECT count(DISTINCT pa.person_id)::int AS n
+            FROM affiliation_org_assignments aoa
+            JOIN subtree s ON s.organization_id = aoa.organization_id
+            JOIN person_affiliations pa
+              ON pa.id = aoa.affiliation_id
+             AND pa.validity @> :as_of
+            WHERE aoa.assignment_type = 'chart_anchor'
+            """
+        ),
+        {"oid": org_id, "as_of": as_of},
+    ).scalar_one()
+    return int(row)
+
+
+def _org_external_identifiers(
+    session: Session, org_id: int
+) -> list[dict[str, str]]:
+    """External identifiers for an organization (ROR, GRID, Wikidata, URL)."""
+    rows = session.execute(
+        text(
+            """
+            SELECT provider, external_id
+            FROM external_identifiers
+            WHERE organization_id = :oid
+            ORDER BY provider, external_id
+            """
+        ),
+        {"oid": org_id},
+    ).mappings().all()
+    return [
+        {"provider": row["provider"], "externalId": row["external_id"]}
+        for row in rows
+    ]
+
+
 def _roster_page(
     session: Session,
     org_id: int,
@@ -167,11 +281,20 @@ def _append_org_ancestry(
 ) -> None:
     chain = _org_ancestry(session, org_id, on)
     inst = institution or (_institution_of(session, chain[0].id, on) if chain else None)
+    chain_ids = [unit.id for unit in chain]
+    child_counts = _children_counts(session, chain_ids, on)
+    roster_counts = _roster_counts(session, chain_ids, on)
     for unit in chain:
-        child_n = len(_children_of(session, unit.id, on))
-        roster = _roster_count(session, unit.id, on)
         add_node(
-            _org_node(unit, inst, _org_sublabel(unit.kind, child_n, roster)),
+            _org_node(
+                unit,
+                inst,
+                _org_sublabel(
+                    unit.kind,
+                    child_counts.get(unit.id, 0),
+                    roster_counts.get(unit.id, 0),
+                ),
+            ),
         )
     for i in range(1, len(chain)):
         links.append(
