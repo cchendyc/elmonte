@@ -2,15 +2,15 @@
 
 Coauthor discovery keys people by (normalized firstname, lastname) built from
 the *roster* on one path and from OpenAlex *display_name* on another, so the
-same real person can end up as two rows (e.g. "Jennifer Doudna" and
-"Jennifer A. Doudna").  This script merges such pairs — but only when there
+same real person can end up as two rows (e.g. "Demo Person D" and
+"Demo Person D. Doe").  This script merges such pairs — but only when there
 is hard evidence they are the same person:
 
   * they share a publication (publication_authors overlap), or
   * they share an external identifier (OpenAlex author id / ORCID).
 
 Groups are formed by normalized name (first token of firstname + lastname);
-a name collision with *no* shared evidence (e.g. two unrelated "Wei Zhang"s
+a name collision with *no* shared evidence (e.g. two unrelated "Jamie Doe"s
 in the legacy seed) is reported but never merged.
 
 Canonical row = the person with the most authorships (ties → lowest id).
@@ -35,7 +35,7 @@ from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from api.deps import _SessionLocal  # noqa: E402
+from api.deps import _SessionLocal
 
 # (table, person_id column, conflict-key columns).  Rows whose key already
 # exists for the canonical person are skipped — the canonical row already

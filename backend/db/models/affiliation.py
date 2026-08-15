@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Identity,
     Index,
     Text,
     text,
@@ -49,7 +50,7 @@ class PersonAffiliation(Base, TimestampMixin):
         ),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     person_id: Mapped[int] = mapped_column(RowId, nullable=False)
     title: Mapped[str | None] = mapped_column(Text)
     affiliation_kind: Mapped[str] = mapped_column(

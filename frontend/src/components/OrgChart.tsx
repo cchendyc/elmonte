@@ -12,7 +12,7 @@ import "@xyflow/react/dist/style.css";
 import { layoutSession, type RFNodeData } from "../lib/graphLayout";
 import type { GraphSessionApi } from "../lib/useGraphSession";
 import { useGraphSession } from "../lib/useGraphSession";
-import { nodeTypes } from "./graphNodes";
+import { nodeTypes } from "./graphNodeTypes";
 
 type SessionApi = Pick<
   GraphSessionApi,
@@ -89,10 +89,13 @@ function OrgChartCanvas({
 
   const anyLoading = Object.values(session.loading).some(Boolean);
 
+  // `height` is required in addition to `minHeight`: React Flow's child uses
+  // height:100%, and a min-height-only parent has no definite containing-block
+  // height on the institution page (the graph rendered with a 0px viewport).
   return (
     <div
       className={`org-chart ${className ?? ""}`.trim()}
-      style={{ minHeight: minHeight ?? 560 }}
+      style={{ minHeight: minHeight ?? 560, height: minHeight ?? 560 }}
       data-testid="org-chart"
     >
       <ReactFlow

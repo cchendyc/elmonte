@@ -20,10 +20,10 @@ import argparse
 import time
 
 import numpy as np
+from api.deps import _SessionLocal
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from api.deps import _SessionLocal
 from scripts.embed.atlas_core import (
     assign_topic_clusters,
     association_strength,
@@ -33,7 +33,6 @@ from scripts.embed.atlas_core import (
     deoverlap_points,
     disparity_filter,
     dominant_field_from_profiles,
-    leiden_communities,
     linlog_layout,
     local_spring_layout,
     normalize_to_canvas,

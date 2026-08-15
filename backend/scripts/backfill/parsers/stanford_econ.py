@@ -33,7 +33,7 @@ from scripts.backfill.common import (
 _MAIN_BODY_RE = re.compile(
     r'<div class="hb-three-column-w-image__main-body[^"]*">(?P<main>.*?)(?:'
     r"<footer|<aside|<div class=\"hb-related-content|$)",
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
 
 # The title block wraps 1-3 `<div>{role}</div>` lines. We use a lookahead to
@@ -44,22 +44,22 @@ _TITLE_BLOCK_RE = re.compile(
     r'<div class="hs-font-lead field-hs-person-title[^"]*">'
     r"(?P<inner>.*?)"
     r'(?=<div class="|<footer|</body)',
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
-_TITLE_LINE_RE = re.compile(r"<div>\s*([^<][^<]*?)\s*</div>", re.S)
+_TITLE_LINE_RE = re.compile(r"<div>\s*([^<][^<]*?)\s*</div>", re.DOTALL)
 
 _BODY_RE = re.compile(
     r'<div class="body text-with-summary[^"]*">(?P<inner>.*?)</div>',
-    re.S | re.I,
+    re.DOTALL | re.IGNORECASE,
 )
 
 _WEBSITE_LINK_RE = re.compile(
     r'<a[^>]+href="(?P<href>https?://[^"]+)"[^>]*>\s*(?P<text>[^<]*?website[^<]*?)\s*</a>',
-    re.I,
+    re.IGNORECASE,
 )
 
 _META_DESC_RE = re.compile(
-    r'<meta\s+name="description"\s+content="([^"]+)"', re.I
+    r'<meta\s+name="description"\s+content="([^"]+)"', re.IGNORECASE
 )
 
 
@@ -113,8 +113,8 @@ def parse(url: str, html: str) -> ProfileExtraction:
 
 def _bio_text(html_fragment: str) -> str:
     """Convert an HTML bio blob to plain text, preserving paragraph breaks."""
-    with_breaks = re.sub(r"</p\s*>", "\n\n", html_fragment, flags=re.I)
-    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.I)
+    with_breaks = re.sub(r"</p\s*>", "\n\n", html_fragment, flags=re.IGNORECASE)
+    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.IGNORECASE)
     return normalize_whitespace(strip_html(with_breaks))
 
 
@@ -141,9 +141,7 @@ def _looks_like_bio(text: str | None) -> bool:
         "admissions",
         "peer advisors",
     )
-    if any(marker in lowered for marker in bad_markers):
-        return False
-    return True
+    return not any(marker in lowered for marker in bad_markers)
 
 
 def _plausible_personal_site(href: str) -> bool:

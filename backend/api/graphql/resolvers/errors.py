@@ -6,6 +6,7 @@ from graphql import GraphQLError
 
 from api.id_codec import decode
 
+
 def _decode_any(public_id: str) -> tuple[str, int]:
     """Decode *public_id* into *(kind, row_id)*.
 

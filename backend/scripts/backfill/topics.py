@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.openalex import OpenAlexClient, short_id
 
 # OpenAlex topic scores on works are 0-100; we store 0-1.
@@ -172,9 +173,8 @@ def main() -> None:
         if args.limit:
             rows = rows[: args.limit]
         print(f"[topics] {len(rows)} publications to process")
-        done = linked = 0
-        for pub_id, work_id in rows:
-            done += 1
+        linked = 0
+        for done, (pub_id, work_id) in enumerate(rows, start=1):
             linked += fetch_and_link(session, client, int(pub_id), str(work_id))
             if done % 50 == 0:
                 print(f"[topics] {done}/{len(rows)} works, {linked} topic links")

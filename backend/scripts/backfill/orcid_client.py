@@ -3,14 +3,23 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any
 
+from db.config import load_dotenv
+
+load_dotenv()
 ORCID_PUBLIC_BASE = "https://pub.orcid.org/v3.0"
-USER_AGENT = "elmonte-backfill/0.1 (research directory; contact: chendyu@berkeley.edu)"
+_CONTACT_EMAIL = os.environ.get("OPENALEX_CONTACT_EMAIL", "").strip()
+USER_AGENT = (
+    f"elmonte-backfill/0.1 (research directory; contact: {_CONTACT_EMAIL})"
+    if _CONTACT_EMAIL
+    else "elmonte-backfill/0.1 (research directory)"
+)
 DEFAULT_TIMEOUT = 30.0
 MIN_INTERVAL = 0.5
 

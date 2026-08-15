@@ -16,8 +16,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    apply_schema()
+    from alembic import op
+
+    apply_schema(op.get_bind())
 
 
 def downgrade() -> None:
-    teardown_schema()
+    from alembic import op
+
+    teardown_schema(op.get_bind())

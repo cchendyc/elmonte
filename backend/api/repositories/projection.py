@@ -2,13 +2,11 @@ from __future__ import annotations
 
 """Projection (atlas) data access: active run + on-map coauthor ties."""
 
-from datetime import date
 from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from api.id_codec import encode
 
 def _active_projection_run(session: Session) -> dict[str, Any] | None:
     return session.execute(
@@ -17,6 +15,8 @@ def _active_projection_run(session: Session) -> dict[str, Any] | None:
             SELECT id, algorithm, point_count
             FROM embedding_runs
             WHERE is_active
+            ORDER BY id DESC
+            LIMIT 1
             """
         )
     ).mappings().first()

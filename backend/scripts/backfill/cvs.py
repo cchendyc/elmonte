@@ -36,6 +36,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import (
     PoliteFetcher,
     clear_cv_affiliations,
@@ -355,14 +356,13 @@ def run(
                 continue
 
             cv_snap_id, cv_body, content_type = loaded
-            if not parse_only and not dry_run:
-                if upsert_person_cv(
-                    session,
-                    person_id=pid,
-                    cv_url=cv_url,
-                    cv_snapshot_id=cv_snap_id,
-                ):
-                    totals["cv_saved"] += 1
+            if not parse_only and not dry_run and upsert_person_cv(
+                session,
+                person_id=pid,
+                cv_url=cv_url,
+                cv_snapshot_id=cv_snap_id,
+            ):
+                totals["cv_saved"] += 1
 
             if save_only:
                 totals["applied"] += 1

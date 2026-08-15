@@ -9,15 +9,27 @@ inside _alter_groups so the module stays importable without the extension.
 from datetime import date
 from typing import Any
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-
 from api.id_codec import encode
-from db.models import Organization, Person
-from api.repositories.orgs import _append_org_ancestry, _children_of, _institution_of, _roster_count, _roster_page
-from api.repositories.people import _anchor_context, _person_brief, _person_relations_all, _top_coauthors
+from api.repositories.orgs import (
+    _append_org_ancestry,
+    _children_counts,
+    _children_of,
+    _institution_of,
+    _roster_count,
+    _roster_counts,
+    _roster_page,
+)
+from api.repositories.people import (
+    _anchor_context,
+    _person_brief,
+    _person_relations_active,
+    _top_coauthors,
+)
 from api.services.names import _full_name, _person_role
 from api.services.orgs import _org_node, _org_sublabel
+from db.models import Organization, Person
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 INLINE_ROSTER_LIMIT = 8
 PAGE_SIZE_DEFAULT = 24
@@ -57,7 +69,7 @@ def _append_supervision_neighborhood(
     links: list[dict[str, Any]],
 ) -> None:
     """One hop of advisor / advisee links for the top-down person trace."""
-    for rel in _person_relations_all(session, person_id, "advised_by"):
+    for rel in _person_relations_active(session, person_id, "advised_by", on):
         if rel.from_person_id == person_id:
             advisor_id = rel.to_person_id
             brief = _person_brief(session, advisor_id, on)
@@ -255,9 +267,21 @@ def _expand_org(session: Session, org_id: int, on: date) -> dict[str, Any]:
 
     _append_org_ancestry(session, org_id, on, institution, add_node, links)
 
+    child_ids = [child.id for child in children]
+    child_counts = _children_counts(session, child_ids, on)
+    child_rosters = _roster_counts(session, child_ids, on)
     for child in children:
-        child_roster = _roster_count(session, child.id, on)
-        add_node(_org_node(child, institution, _org_sublabel(child.kind, 0, child_roster)))
+        add_node(
+            _org_node(
+                child,
+                institution,
+                _org_sublabel(
+                    child.kind,
+                    child_counts.get(child.id, 0),
+                    child_rosters.get(child.id, 0),
+                ),
+            ),
+        )
         links.append(
             {
                 "source": encode("org", unit.id),

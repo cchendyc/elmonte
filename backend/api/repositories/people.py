@@ -11,14 +11,13 @@ services.names helpers, so there are no import cycles.
 from datetime import date, timedelta
 from typing import Any
 
-from sqlalchemy import or_, select, text
-from sqlalchemy.orm import Session
-
 from api.id_codec import encode
 from api.repositories.orgs import _institution_of
 from api.services.names import _full_name, _person_role
-from db.models import Organization, Person, PersonRelationship
+from db.models import Person, PersonRelationship
 from scripts.backfill.common import is_displayable_publication
+from sqlalchemy import or_, select, text
+from sqlalchemy.orm import Session
 
 COLLEAGUE_LIMIT = 8
 
@@ -234,7 +233,6 @@ def _person_briefs(
                 int(r["child_org_id"]): (int(r["parent_id"]), r["name"], r["kind"])
                 for r in parent_rows
             }
-            next_pending: list[int] = []
             merged: dict[int, list[int]] = {}
             for oid in unresolved:
                 parent = parents.get(oid)
@@ -305,10 +303,32 @@ def _colleagues_at_anchor(
         },
     ).mappings().all()
     return [dict(r) for r in rows]
-def _person_publications(session: Session, person_id: int, limit: int) -> list[dict[str, Any]]:
-    rows = session.execute(
-        text(
+def _person_publications(
+    session: Session, person_id: int, limit: int | None
+) -> list[dict[str, Any]]:
+    """Return displayable publications for *person_id*.
+
+    ``limit=None`` means no upper bound (GDPR Art. 20 export must be complete).
+    The SQL limit is a best-effort pre-filter; junk titles are filtered again
+    in Python below, so callers needing an exact page size should request a
+    little headroom.
+    """
+    if limit is None:
+        sql = """
+            SELECT
+              pub.id,
+              pub.title,
+              pub.publication_year,
+              pub.cited_by_count,
+              pa.author_position
+            FROM publication_authors pa
+            JOIN publications pub ON pub.id = pa.publication_id
+            WHERE pa.person_id = :pid
+            ORDER BY pub.publication_year DESC, pub.id DESC
             """
+        params: dict[str, Any] = {"pid": person_id}
+    else:
+        sql = """
             SELECT
               pub.id,
               pub.title,
@@ -321,12 +341,14 @@ def _person_publications(session: Session, person_id: int, limit: int) -> list[d
             ORDER BY pub.publication_year DESC, pub.id DESC
             LIMIT :lim
             """
-        ),
-        {"pid": person_id, "lim": limit},
-    ).mappings().all()
-    return [
+        params = {"pid": person_id, "lim": limit}
+
+    rows = session.execute(text(sql), params).mappings().all()
+
+    pubs = [
         {
             "id": f"pub:{int(row['id'])}",
+            "rowId": int(row["id"]),
             "title": row["title"],
             "year": int(row["publication_year"]),
             "citedByCount": int(row["cited_by_count"]) if row["cited_by_count"] is not None else None,
@@ -335,6 +357,44 @@ def _person_publications(session: Session, person_id: int, limit: int) -> list[d
         for row in rows
         if is_displayable_publication(row["title"])
     ]
+    if not pubs:
+        return []
+
+    pub_ids = [pub["rowId"] for pub in pubs]
+
+    doi_rows = session.execute(
+        text(
+            """
+            SELECT publication_id, external_id
+            FROM external_identifiers
+            WHERE provider = 'doi' AND publication_id = ANY(:ids)
+            """
+        ),
+        {"ids": pub_ids},
+    ).mappings().all()
+    doi_by_pub = {int(r["publication_id"]): r["external_id"] for r in doi_rows}
+
+    venue_rows = session.execute(
+        text(
+            """
+            SELECT p.id AS publication_id, o.short_name, o.name
+            FROM publications p
+            LEFT JOIN organizations o ON o.id = p.venue_org_id
+            WHERE p.id = ANY(:ids)
+            """
+        ),
+        {"ids": pub_ids},
+    ).mappings().all()
+    venue_by_pub = {
+        int(r["publication_id"]): r["short_name"] or r["name"]
+        for r in venue_rows
+    }
+
+    for pub in pubs:
+        pub_id = pub.pop("rowId")
+        pub["doi"] = doi_by_pub.get(pub_id)
+        pub["venue"] = venue_by_pub.get(pub_id)
+    return pubs
 def _person_relations_all(
     session: Session, person_id: int, kind: str
 ) -> list[PersonRelationship]:
@@ -361,7 +421,9 @@ def _closest_people(session: Session, person_id: int, on: date, limit: int) -> l
         for rel in relations
     ]
     coauthor_rows = _top_coauthors(session, person_id, limit)
+    colleague_rows = _colleagues_at_anchor(session, person_id, on, COLLEAGUE_LIMIT)
     brief_ids.extend(int(row["other_id"]) for row in coauthor_rows)
+    brief_ids.extend(int(row["person_id"]) for row in colleague_rows)
     briefs = _person_briefs(session, brief_ids, on)
 
     def add_hit(
@@ -412,22 +474,17 @@ def _closest_people(session: Session, person_id: int, on: date, limit: int) -> l
             10 - min(weight, 9),
         )
 
-    for row in _colleagues_at_anchor(session, person_id, on, COLLEAGUE_LIMIT):
-        add_hit(
-            row["person_id"],
-            "colleague",
-            "Same unit",
-            20,
-            label=_full_name(row["firstname"], row["middlename"], row["lastname"]),
-            role=_person_role(row["title"]),
-            institution=None,
-        )
+    for row in colleague_rows:
+        add_hit(row["person_id"], "colleague", "Same unit", 20)
 
     results.sort(key=lambda item: (item["_priority"], item["label"]))
     for item in results:
         item.pop("_priority", None)
     return results[:limit]
-def _person_relations(session: Session, person_id: int, kind: str) -> list[PersonRelationship]:
+def _person_relations_active(
+    session: Session, person_id: int, kind: str, on: date
+) -> list[PersonRelationship]:
+    """Directed relationship rows whose validity contains ``on``."""
     return list(
         session.execute(
             select(PersonRelationship).where(
@@ -436,8 +493,8 @@ def _person_relations(session: Session, person_id: int, kind: str) -> list[Perso
                     PersonRelationship.from_person_id == person_id,
                     PersonRelationship.to_person_id == person_id,
                 ),
-                text("person_relationships.validity @> CURRENT_DATE"),
-            )
+                text("person_relationships.validity @> :as_of"),
+            ).params(as_of=on)
         ).scalars()
     )
 

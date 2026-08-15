@@ -8,6 +8,7 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Identity,
     Index,
     Text,
     text,
@@ -38,7 +39,7 @@ class Organization(Base, TimestampMixin):
         ),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
     short_name: Mapped[str | None] = mapped_column(Text)
     kind: Mapped[str] = mapped_column(enums.org_kind, nullable=False)
@@ -74,7 +75,7 @@ class OrgRelationship(Base, TimestampMixin):
         Index("idx_org_relationships_validity", "validity", postgresql_using="gist"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     child_org_id: Mapped[int] = mapped_column(RowId, nullable=False)
     parent_org_id: Mapped[int] = mapped_column(RowId, nullable=False)
     relationship_type: Mapped[str] = mapped_column(

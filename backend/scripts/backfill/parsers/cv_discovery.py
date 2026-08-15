@@ -10,17 +10,17 @@ from scripts.backfill.common import normalize_whitespace, strip_html
 
 _CV_HREF_RE = re.compile(
     r'<a[^>]+href=["\'](?P<href>[^"\']+)["\'][^>]*>(?P<label>.*?)</a>',
-    re.I | re.S,
+    re.IGNORECASE | re.DOTALL,
 )
 
 _CV_LABEL_RE = re.compile(
     r"\b(?:curriculum\s+vitae|vitae|resume|resumé|cv)\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 _CV_PATH_RE = re.compile(
     r"(?:^|[/?#])(?:cv|curriculum[-_]?vitae|vita)(?:\.(?:pdf|docx?|html?))?(?:$|[/?#])",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -81,11 +81,15 @@ def _plausible_cv_url(url: str, homepage_url: str) -> bool:
 
     home_host = urlparse(homepage_url).netloc.lower()
     host = parsed.netloc.lower()
-    if host and host != home_host and not host.endswith("." + home_host):
+    if (
+        host
+        and host != home_host
+        and not host.endswith("." + home_host)
         # Allow common file hosts used by academics.
-        if not any(
+        and not any(
             allowed in host
             for allowed in ("dropbox.com", "google.com", "github.io", "github.com")
-        ):
-            return False
+        )
+    ):
+        return False
     return "cv" in lowered or "vitae" in lowered or "resume" in lowered

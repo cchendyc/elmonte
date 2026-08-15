@@ -9,6 +9,7 @@ from sqlalchemy import (
     CheckConstraint,
     Computed,
     DateTime,
+    Identity,
     Index,
     Numeric,
     Text,
@@ -42,7 +43,7 @@ class Grant(Base, TimestampMixin):
         Index("idx_grants_validity", "validity", postgresql_using="gist"),
     )
 
-    id: Mapped[int] = mapped_column(RowId, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(RowId, Identity(), primary_key=True)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     funder_org_id: Mapped[int] = mapped_column(RowId, nullable=False)
     award_number: Mapped[str | None] = mapped_column(Text)

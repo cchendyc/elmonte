@@ -26,6 +26,12 @@ def _parse_date_value(value: str) -> date:
 
 @date_scalar.literal_parser
 def _parse_date_literal(ast: Any) -> date:
-    return date.fromisoformat(ast.value)
+    value = getattr(ast, "value", None)
+    if not isinstance(value, str):
+        raise GraphQLError(f"Invalid date literal: {value!r}")
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        raise GraphQLError(f"Invalid date: {value!r}") from None
 
 

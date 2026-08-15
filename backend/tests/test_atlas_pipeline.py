@@ -2,9 +2,8 @@
 
 import numpy as np
 import pytest
-from sqlalchemy import text
-
 from api.deps import _SessionLocal
+from sqlalchemy import text
 
 
 def test_orphan_spiral_deterministic_placement():
@@ -19,7 +18,7 @@ def test_orphan_spiral_deterministic_placement():
     }
 
     def run():
-        pos, labels, cpos, collab, gamma, tag = build_network_view(
+        pos, labels, _cpos, _collab, _gamma, _tag = build_network_view(
             8, collapsed, target_min=1, target_max=4, seed=42
         )
         return pos, labels
@@ -44,21 +43,21 @@ def test_orphan_spiral_deterministic_placement():
 
 @pytest.mark.integration
 def test_build_atlas_dry_run():
-    from scripts.embed.build_atlas import build_network_view, build_topic_view
     from scripts.embed.atlas_core import collapse_edges
+    from scripts.embed.build_atlas import build_network_view, build_topic_view
     from scripts.embed.topic_profiles import load_topic_profiles
 
     with _SessionLocal() as s:
         people = [int(r[0]) for r in s.execute(text("SELECT id FROM people ORDER BY id")).all()]
         assert len(people) >= 2
-        from scripts.embed.build_atlas import load_network_edges, cluster_targets
+        from scripts.embed.build_atlas import cluster_targets, load_network_edges
         edges = load_network_edges(s, people)
         collapsed = collapse_edges(edges, len(people))
         tmin, tmax = cluster_targets(len(people))
-        pos, labels, cpos, collab, gamma, tag = build_network_view(len(people), collapsed, tmin, tmax)
+        _pos, labels, _cpos, _collab, _gamma, _tag = build_network_view(len(people), collapsed, tmin, tmax)
         assert len(labels) == len(people)
         assert 1 <= max(labels) + 1 <= len(people)
         topic_mat, field_mat, fields = load_topic_profiles(s, people)
-        pos2, labels2, cpos2, collab2, names = build_topic_view(len(people), topic_mat, field_mat, fields, collapsed, tmin, tmax)
+        _pos2, labels2, _cpos2, _collab2, names = build_topic_view(len(people), topic_mat, field_mat, fields, collapsed, tmin, tmax)
         assert len(labels2) == len(people)
         assert len(names) == max(labels2) + 1

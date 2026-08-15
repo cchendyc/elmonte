@@ -7,6 +7,7 @@ from typing import Any
 from api.id_codec import encode
 from db.models import Organization
 
+
 def _org_label(unit: Organization, institution: Organization | None) -> str:
     if unit.short_name:
         return unit.short_name
@@ -45,6 +46,8 @@ def _org_unit(
         "label": _org_label(unit, institution),
         "orgKind": unit.kind,
         "sublabel": _org_sublabel(unit.kind, child_count, roster_count),
+        "childCount": int(child_count),
+        "rosterCount": int(roster_count),
     }
 
 

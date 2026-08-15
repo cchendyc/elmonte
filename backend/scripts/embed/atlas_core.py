@@ -273,7 +273,7 @@ def assign_topic_clusters(
     from scipy.cluster.hierarchy import fcluster, linkage
     from scipy.spatial.distance import pdist
 
-    n = dominant_field.shape[0]
+    dominant_field.shape[0]
     labels = dominant_field.astype(np.int64).copy()
     next_id = int(labels.max() + 1) if labels.size else 0
     names: dict[int, str] = {}

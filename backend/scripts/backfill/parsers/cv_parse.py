@@ -18,28 +18,28 @@ from scripts.backfill.rank import classify_position_rank, infer_affiliation_kind
 _SECTION_EMPLOYMENT_RE = re.compile(
     r"^(?:employment|appointments|academic appointments|academic positions|"
     r"professional experience|positions held|positions|experience|work history)\s*$",
-    re.I,
+    re.IGNORECASE,
 )
 _SECTION_EDUCATION_RE = re.compile(
     r"^(?:education|degrees|academic background|training)\s*$",
-    re.I,
+    re.IGNORECASE,
 )
 _SECTION_STOP_RE = re.compile(
     r"^(?:publications|working papers|journal publications|research|awards|"
     r"honors|grants|teaching|references|other publications|under review)\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 _LEADING_ENTRY_RE = re.compile(
     r"^(?P<start>(?:19|20)\d{2})\s*[-–—]\s*"
     r"(?:(?P<end>(?:19|20)\d{2}|present|current|now)\s+)?"
     r"(?P<body>.+)$",
-    re.I,
+    re.IGNORECASE,
 )
 _INLINE_DATE_RE = re.compile(
     r"(?P<start>(?:19|20)\d{2})\s*[-–—]\s*"
     r"(?P<end>(?:19|20)\d{2}|present|current|now)",
-    re.I,
+    re.IGNORECASE,
 )
 _SINGLE_YEAR_RE = re.compile(r"\b((?:19|20)\d{2})\b")
 _ROLE_RE = re.compile(
@@ -52,7 +52,7 @@ _ROLE_RE = re.compile(
     r"A\.?B\.?(?:\s+in\s+[^,;]+)?|"
     r"M\.?A\.?(?:\s+in\s+[^,;]+)?"
     r")\b",
-    re.I,
+    re.IGNORECASE,
 )
 _ORG_MARKERS = (
     "university",
@@ -145,9 +145,9 @@ def preprocess_cv_text(text: str) -> str:
     for header in _SECTION_HEADERS:
         text = re.sub(
             rf"\s+({re.escape(header)})\s+",
-            rf"\n\1\n",
+            r"\n\1\n",
             text,
-            flags=re.I,
+            flags=re.IGNORECASE,
         )
 
     text = re.sub(r"(?<!\d)(\d{4}\s*[-–—])", r"\n\1", text)

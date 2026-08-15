@@ -16,17 +16,44 @@ from typing import Any
 
 from db.config import load_dotenv
 
+from scripts.backfill.common import SafeRedirectHandler, validate_public_http_url
+
 OPENALEX_BASE = "https://api.openalex.org"
 DEFAULT_TIMEOUT = 30.0
 MIN_INTERVAL = 0.11
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024
+MAX_REDIRECTS = 5
+
+# Full URLs are accepted only for OpenAlex hosts.  Client code normally
+# passes paths; this is a guard for callers that echo a URL found in data.
+OPENALEX_HOST_SUFFIXES = (".openalex.org",)
+
+
+def _validate_openalex_url(url: str) -> None:
+    validate_public_http_url(url)
+    host = (urllib.parse.urlparse(url).hostname or "").lower()
+    if not (host == "openalex.org" or host.endswith(OPENALEX_HOST_SUFFIXES)):
+        raise ValueError(f"refusing non-OpenAlex URL: {url}")
+
+
+class _OpenAlexRedirectHandler(SafeRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is not None:
+            _validate_openalex_url(new_req.full_url)
+        return new_req
 
 
 def _user_agent() -> str:
-    """Polite-pool User-Agent.  OpenAlex asks for a contact email — override
-    with OPENALEX_CONTACT_EMAIL (the original author's address is the default
-    so nothing breaks for existing deployments)."""
-    contact = os.environ.get("OPENALEX_CONTACT_EMAIL") or "chendyu@berkeley.edu"
-    return f"elmonte-backfill/0.2 (research directory; contact: {contact})"
+    """Polite-pool User-Agent.
+
+    OpenAlex asks for a contact email. It is supplied through
+    OPENALEX_CONTACT_EMAIL and never hardcoded in the repository.
+    """
+    contact = os.environ.get("OPENALEX_CONTACT_EMAIL", "").strip()
+    if contact:
+        return f"elmonte-backfill/0.2 (research directory; contact: {contact})"
+    return "elmonte-backfill/0.2 (research directory)"
 
 
 USER_AGENT = _user_agent()
@@ -65,6 +92,18 @@ def short_id(openalex_id: str | None) -> str | None:
     return openalex_id.rstrip("/").rsplit("/", 1)[-1]
 
 
+def _redact_url(url: str) -> str:
+    """Remove ``api_key`` (and any future secrets) from URLs used in errors."""
+    parsed = urllib.parse.urlparse(url)
+    if not parsed.query:
+        return url
+    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    redacted = [(k, "REDACTED" if k == "api_key" else v) for k, v in query]
+    return urllib.parse.urlunparse(
+        parsed._replace(query=urllib.parse.urlencode(redacted))
+    )
+
+
 class OpenAlexClient:
     def __init__(
         self,
@@ -95,6 +134,7 @@ class OpenAlexClient:
 
     def get_json(self, path_or_url: str, *, params: dict[str, str] | None = None) -> dict[str, Any]:
         if path_or_url.startswith("http"):
+            _validate_openalex_url(path_or_url)
             url = path_or_url
         else:
             url = f"{OPENALEX_BASE}{path_or_url}"
@@ -102,8 +142,10 @@ class OpenAlexClient:
             sep = "&" if "?" in url else "?"
             url = f"{url}{sep}{urllib.parse.urlencode(params)}"
         url = self._with_api_key(url)
+        redacted = _redact_url(url)
 
         backoff = 2.0
+        opener = urllib.request.build_opener(_OpenAlexRedirectHandler())
         for attempt in range(8):
             self._wait()
             req = urllib.request.Request(
@@ -114,18 +156,28 @@ class OpenAlexClient:
                 },
             )
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                    body = resp.read()
+                with opener.open(req, timeout=self.timeout) as resp:
+                    body = resp.read(MAX_RESPONSE_BYTES + 1)
+                    if len(body) > MAX_RESPONSE_BYTES:
+                        raise RuntimeError(
+                            f"OpenAlex response exceeds {MAX_RESPONSE_BYTES} bytes"
+                        )
                     status = int(resp.status)
             except urllib.error.HTTPError as err:
-                body = err.read() or b""
+                body = err.read(MAX_RESPONSE_BYTES + 1) or b""
+                if len(body) > MAX_RESPONSE_BYTES:
+                    raise RuntimeError(
+                        f"OpenAlex response exceeds {MAX_RESPONSE_BYTES} bytes"
+                    ) from err
                 status = int(err.code)
             except urllib.error.URLError as err:
                 if attempt < 7:
                     time.sleep(backoff)
                     backoff = min(backoff * 2, 120.0)
                     continue
-                raise RuntimeError(f"OpenAlex network error for {url}: {err}") from err
+                raise RuntimeError(
+                    f"OpenAlex network error for {redacted}: {err}"
+                ) from err
             finally:
                 self._last_hit = time.monotonic()
 
@@ -134,10 +186,17 @@ class OpenAlexClient:
                 backoff = min(backoff * 2, 120.0)
                 continue
             if status >= 400:
-                raise RuntimeError(f"OpenAlex {status} for {url}: {body[:200]!r}")
-            return json.loads(body)
+                raise RuntimeError(
+                    f"OpenAlex {status} for {redacted}: {body[:200]!r}"
+                )
+            try:
+                return json.loads(body)
+            except json.JSONDecodeError as err:
+                raise RuntimeError(
+                    f"OpenAlex returned invalid JSON for {redacted}"
+                ) from err
 
-        raise RuntimeError(f"OpenAlex rate limit persisted for {url}")
+        raise RuntimeError(f"OpenAlex rate limit persisted for {redacted}")
 
     def author_by_orcid(self, orcid: str) -> dict[str, Any] | None:
         try:

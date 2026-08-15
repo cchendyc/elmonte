@@ -27,19 +27,20 @@ import json
 import sys
 from collections import Counter
 from datetime import date
+from html import unescape
 from pathlib import Path
 from typing import Any
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
-from scripts.backfill import common
+
 from scripts.backfill.common import (
     DUPLICATE_PUBLICATION_YEAR_TOLERANCE,
     clean_publication_title,
-    publication_titles_equivalent,
     publications_likely_same_paper,
     resolve_berkeley_university_org_id,
     should_skip_openalex_work,
@@ -70,7 +71,7 @@ def _normalize_person_name(first: str, last: str) -> str:
 
 
 def _normalize_openalex_name(display_name: str) -> str:
-    return " ".join(display_name.strip().lower().split())
+    return " ".join(unescape(display_name).strip().lower().split())
 
 
 def load_people(
@@ -139,9 +140,7 @@ def _include_work_for_coauthors(work: dict[str, Any]) -> bool:
     if year is None or year < MIN_COAUTHOR_YEAR:
         return False
     authorships = work.get("authorships") or []
-    if len(authorships) >= MAX_AUTHORS_PER_PAPER:
-        return False
-    return True
+    return not len(authorships) >= MAX_AUTHORS_PER_PAPER
 
 
 def build_person_indexes(
@@ -175,7 +174,7 @@ def build_person_indexes(
 
 
 def _split_display_name(display_name: str) -> tuple[str, str | None, str]:
-    parts = display_name.strip().split()
+    parts = " ".join(unescape(display_name).split()).split()
     if not parts:
         raise ValueError("blank display name")
     if len(parts) == 1:
@@ -216,14 +215,13 @@ def ensure_person_from_openalex_author(
     key = _normalize_openalex_name(display)
     if key in name_map:
         person_id = name_map[key]
-        if oa_id:
-            if upsert_external_identifier(
-                session,
-                provider="openalex",
-                external_id=oa_id,
-                person_id=person_id,
-            ):
-                openalex_map[oa_id] = person_id
+        if oa_id and upsert_external_identifier(
+            session,
+            provider="openalex",
+            external_id=oa_id,
+            person_id=person_id,
+        ):
+            openalex_map[oa_id] = person_id
         return person_id
 
     first, middle, last = _split_display_name(display)

@@ -219,10 +219,3 @@ export const PersonNode = memo(PersonNodeImpl);
 export const OrgNode = memo(OrgNodeImpl);
 export const CohortNode = memo(CohortNodeImpl);
 export const PeerMore = memo(PeerMoreImpl);
-
-export const nodeTypes = {
-  person: PersonNode,
-  org: OrgNode,
-  cohort: CohortNode,
-  peer_more: PeerMore,
-};

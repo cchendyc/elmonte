@@ -9,9 +9,8 @@ from __future__ import annotations
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy import text
-
 from db.names import parse_full_name
+from sqlalchemy import text
 
 revision = "5a41dfb4d79c"
 down_revision = "9a20bc7cc432"

@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -9,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { useLocation } from "react-router-dom";
+import { OnboardingContext } from "../lib/onboardingContext";
 import {
   TOUR_STEPS,
   hasCompletedOnboarding,
@@ -23,13 +22,6 @@ type SpotlightRect = {
   width: number;
   height: number;
 };
-
-type OnboardingContextValue = {
-  startTour: () => void;
-  isActive: boolean;
-};
-
-const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 const SPOTLIGHT_PADDING = 8;
 const POPOVER_GAP = 14;
@@ -366,12 +358,4 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       )}
     </OnboardingContext.Provider>
   );
-}
-
-export function useOnboarding(): OnboardingContextValue {
-  const context = useContext(OnboardingContext);
-  if (!context) {
-    throw new Error("useOnboarding must be used within OnboardingProvider");
-  }
-  return context;
 }

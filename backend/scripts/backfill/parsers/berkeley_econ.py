@@ -25,13 +25,13 @@ from scripts.backfill.common import (
 )
 
 _POSITION_RE = re.compile(
-    r'<div class="display-position">(?P<t>[^<]*)</div>', re.I
+    r'<div class="display-position">(?P<t>[^<]*)</div>', re.IGNORECASE
 )
 
 _HOMEPAGE_RE = re.compile(
     r'<div class="display-homepage">\s*<div class="field_value">\s*'
     r'<a[^>]+href="(?P<href>https?://[^"]+)"',
-    re.I | re.S,
+    re.IGNORECASE | re.DOTALL,
 )
 
 # The bio lives inside `field--name-field-bio` → `field__item`. We accept
@@ -40,7 +40,7 @@ _HOMEPAGE_RE = re.compile(
 _BIO_RE = re.compile(
     r'field--name-field-bio[^>]*>.*?'
     r'<div class="field__item">(?P<bio>.*?)</div>',
-    re.I | re.S,
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -76,8 +76,8 @@ def parse(url: str, html: str) -> ProfileExtraction:
 
 
 def _bio_text(fragment: str) -> str:
-    with_breaks = re.sub(r"</p\s*>", "\n\n", fragment, flags=re.I)
-    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.I)
+    with_breaks = re.sub(r"</p\s*>", "\n\n", fragment, flags=re.IGNORECASE)
+    with_breaks = re.sub(r"<br\s*/?>", "\n", with_breaks, flags=re.IGNORECASE)
     return normalize_whitespace(strip_html(with_breaks))
 
 

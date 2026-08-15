@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from api.deps import _SessionLocal
+
 from scripts.backfill.common import upsert_external_identifier, write_snapshot
 from scripts.backfill.openalex import OpenAlexClient, pick_best_author, short_id
 from scripts.backfill.rosters import refresh_roster_views
@@ -41,10 +42,10 @@ def _short_name(name: str) -> str | None:
     paren = re.search(r"\(([^)]+)\)\s*$", cleaned)
     if paren:
         return paren.group(1).strip()
-    words = cleaned.split()
-    if len(words) <= 4:
-        return cleaned
-    return " ".join(words[:4])
+    # Only a genuinely short/acronym name is a useful UI label. The old
+    # "first four words" fallback produced labels like
+    # "University of California, San" — truncation is not abbreviation.
+    return cleaned if len(cleaned.split()) <= 4 else None
 
 
 def _infer_org_kind(inst: dict[str, Any], *, is_root: bool, is_leaf: bool) -> str:
@@ -73,13 +74,28 @@ def _infer_org_kind(inst: dict[str, Any], *, is_root: bool, is_leaf: bool) -> st
 
     if oa_type == "education":
         if is_root:
-            return "university"
+            if re.search(
+                r"universit|college|school|academy|polytechnic|universidad|universität|hochschule|institute of technology|eth zurich|unsw|uclouvain|tu wien|vishwa vidyapeetham|jamia hamdard",
+                name,
+                re.IGNORECASE,
+            ):
+                return "university"
+            # OpenAlex marks hospitals, museums and research centres as
+            # education orgs. They are real institutions, but not
+            # universities, and should not crowd the trace picker.
+            return "institute"
         if is_leaf:
             return "department"
         return "school"
 
     if is_root:
-        return "university"
+        if re.search(
+            r"universit|college|school|academy|polytechnic|universidad|universität|hochschule|institute of technology|eth zurich|unsw|uclouvain|tu wien|vishwa vidyapeetham|jamia hamdard",
+            name,
+            re.IGNORECASE,
+        ):
+            return "university"
+        return "institute"
     if is_leaf:
         return "department"
     return "institute"
@@ -163,6 +179,19 @@ def _find_org_by_name(session: Session, name: str) -> int | None:
 def _ensure_org_relationship(
     session: Session, *, child_org_id: int, parent_org_id: int
 ) -> None:
+    if child_org_id == parent_org_id:
+        # Some OpenAlex lineage chains repeat an institution; a self-parent is
+        # a database check violation, not a reason to abort the whole person.
+        return
+    child_kind = session.execute(
+        text("SELECT kind FROM organizations WHERE id = :oid"), {"oid": child_org_id}
+    ).scalar()
+    if child_kind == "university":
+        # The product model treats universities as roots. OpenAlex lineages can
+        # place an existing university under a state system / institute (UC
+        # Berkeley under IGI, MIT under Lincoln Lab, ...); accepting that would
+        # silently re-home every chart already anchored to the university.
+        return
     existing_parent = session.execute(
         text(
             """
@@ -242,7 +271,11 @@ def ensure_institution_tree(
                     organization_id=org_id,
                 )
                 openalex_map[oa_id] = org_id
-        org_ids.append(org_id)
+        if not org_ids or org_ids[-1] != org_id:
+            org_ids.append(org_id)
+
+    if len(org_ids) == 1:
+        return org_ids[0]
 
     for child_id, parent_id in zip(org_ids[1:], org_ids[:-1], strict=False):
         _ensure_org_relationship(session, child_org_id=child_id, parent_org_id=parent_id)
@@ -420,26 +453,36 @@ def run(
                     f"[{i}/{len(targets)}] {person['firstname']} {person['lastname']}",
                     flush=True,
                 )
+            map_before = dict(openalex_org_map)
             try:
-                per = ingest_person(
-                    session,
-                    client,
-                    person,
-                    openalex_org_map=openalex_org_map,
-                )
+                # A savepoint scopes each person's writes. One bad lineage can
+                # no longer strand a half-written org/assignment pair from the
+                # same transaction, and it never rolls back previously
+                # successful people waiting in the current batch.
+                with session.begin_nested():
+                    per = ingest_person(
+                        session,
+                        client,
+                        person,
+                        openalex_org_map=openalex_org_map,
+                    )
             except (RuntimeError, urllib.error.URLError, IntegrityError) as err:
                 totals["errors"] += 1
                 if verbose:
                     print(f"  error: {err}", flush=True)
-                if dry_run:
-                    session.rollback()
-                else:
-                    session.commit()
+                # The DB savepoint rolled back any org rows inserted for this
+                # person; the Python org-id cache must be rolled back too, or
+                # the next author at that institution would receive an
+                # affiliation assignment to a row that no longer exists.
+                openalex_org_map.clear()
+                openalex_org_map.update(map_before)
                 continue
             totals.update(per)
             pending += 1
             if dry_run:
                 session.rollback()
+                openalex_org_map.clear()
+                openalex_org_map.update(map_before)
             elif pending >= commit_batch:
                 session.commit()
                 pending = 0

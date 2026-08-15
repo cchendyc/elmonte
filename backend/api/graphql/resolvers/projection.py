@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """projection + personCoauthorTies field resolvers."""
 
+import math
+import threading
 import time
 from datetime import date
 from typing import Any
@@ -22,40 +24,68 @@ from api.services.names import _full_name
 _PROJECTION_CACHE: dict[tuple[str, int, str], tuple[float, dict[str, Any]]] = {}
 _PROJECTION_TTL = 3600.0
 _PROJECTION_CACHE_MAX = 16
+_PROJECTION_CACHE_LOCK = threading.Lock()
 
 
 def _cached_projection(key: tuple[str, int, str]) -> dict[str, Any] | None:
-    hit = _PROJECTION_CACHE.get(key)
-    if hit is None or time.monotonic() - hit[0] > _PROJECTION_TTL:
-        return None
-    return hit[1]
+    now = time.monotonic()
+    with _PROJECTION_CACHE_LOCK:
+        hit = _PROJECTION_CACHE.get(key)
+        if hit is None:
+            return None
+        if now - hit[0] > _PROJECTION_TTL:
+            _PROJECTION_CACHE.pop(key, None)
+            return None
+        return hit[1]
 
 
 def _store_projection(key: tuple[str, int, str], payload: dict[str, Any]) -> None:
-    if len(_PROJECTION_CACHE) >= _PROJECTION_CACHE_MAX:
-        _PROJECTION_CACHE.clear()
-    _PROJECTION_CACHE[key] = (time.monotonic(), payload)
+    with _PROJECTION_CACHE_LOCK:
+        if len(_PROJECTION_CACHE) >= _PROJECTION_CACHE_MAX:
+            # Drop expired entries first; clear only when every slot is live.
+            now = time.monotonic()
+            for existing_key in list(_PROJECTION_CACHE):
+                if now - _PROJECTION_CACHE[existing_key][0] > _PROJECTION_TTL:
+                    _PROJECTION_CACHE.pop(existing_key, None)
+        if len(_PROJECTION_CACHE) >= _PROJECTION_CACHE_MAX:
+            _PROJECTION_CACHE.clear()
+        _PROJECTION_CACHE[key] = (time.monotonic(), payload)
+
+
+def _empty_projection(view: str) -> dict[str, Any]:
+    return {
+        "runId": "",
+        "algorithm": "",
+        "view": view,
+        "pointCount": 0,
+        "points": [],
+        "clusters": [],
+        "edges": [],
+    }
 
 
 @query.field("projection")
 def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
     view = view if view in ("topic", "network") else "topic"
     session = _session(info)
-    active = session.execute(
-        text(
-            """
-            SELECT id, algorithm, point_count
-            FROM embedding_runs
-            WHERE is_active
-            """
-        )
-    ).mappings().first()
+
+    # Per-request memoization: a query with N aliases of `projection` must not
+    # run the same heavy SQL N times.  The process-level TTL cache handles
+    # cross-request reuse; this handles alias amplification inside one request.
+    request_cache = info.context.setdefault("_projection_cache", {})
+    if view in request_cache:
+        return request_cache[view]
+
+    active = _active_projection_run(session)
     if active is None:
-        return {"runId": "", "algorithm": "", "view": view, "pointCount": 0, "points": [], "clusters": [], "edges": []}
+        payload = _empty_projection(view)
+        request_cache[view] = payload
+        return payload
 
     cache_key = (view, int(active["id"]), date.today().isoformat())
     cached = _cached_projection(cache_key)
     if cached is not None:
+        request_cache[view] = cached
         return cached
 
     rows = session.execute(
@@ -107,6 +137,7 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
               JOIN organizations o ON o.id = ANY(t.ancestor_ids)
               WHERE t.organization_id = pa.organization_id
                 AND o.kind = 'university'
+              ORDER BY array_position(t.ancestor_ids, o.id)
               LIMIT 1
             ) inst ON TRUE
             -- Aggregate publications once for the whole projection instead of
@@ -143,6 +174,10 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
 
     points = []
     for r in rows:
+        if not math.isfinite(float(r["x"])) or not math.isfinite(float(r["y"])):
+            # A malformed projection row must never turn the whole map into
+            # NaN (JSONResponse rejects NaN) or a browser-side blank screen.
+            continue
         anchor_row = {"validity": r.get("validity"), "ends_at": r.get("ends_at")}
         pid = encode("person", int(r["person_id"]))
         points.append(
@@ -189,6 +224,20 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
             {"run_id": active["id"], "view": view},
         ).mappings().all()
     ]
+    clusters = [c for c in clusters if math.isfinite(c["cx"]) and math.isfinite(c["cy"])]
+    cluster_ids = {int(c["id"]) for c in clusters}
+    points = [
+        {
+            **point,
+            "clusterId": point["clusterId"]
+            if point["clusterId"] in cluster_ids
+            else None,
+            "clusterLabel": point["clusterLabel"]
+            if point["clusterId"] in cluster_ids
+            else None,
+        }
+        for point in points
+    ]
     edges = [
         {
             "sourceCluster": int(row["source_cluster"]),
@@ -204,7 +253,24 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
             {"run_id": active["id"], "view": view},
         ).mappings().all()
     ]
-    return {
+    edges = [
+        edge
+        for edge in edges
+        if edge["sourceCluster"] in cluster_ids
+        and edge["targetCluster"] in cluster_ids
+        and (
+            edge["collaborationWeight"] is None
+            or (
+                math.isfinite(edge["collaborationWeight"])
+                and edge["collaborationWeight"] >= 0
+            )
+        )
+        and (
+            edge["topicWeight"] is None
+            or (math.isfinite(edge["topicWeight"]) and edge["topicWeight"] >= 0)
+        )
+    ]
+    payload = {
         "runId": str(active["id"]),
         "algorithm": active["algorithm"],
         "view": view,
@@ -213,6 +279,11 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
         "clusters": clusters,
         "edges": edges,
     }
+    _store_projection(cache_key, payload)
+    request_cache[view] = payload
+    return payload
+
+
 @query.field("personCoauthorTies")
 def resolve_person_coauthor_ties(_obj, info, personId: str, view: str = "topic") -> list[dict[str, Any]]:
     row_id = _decode_id(personId, "person")

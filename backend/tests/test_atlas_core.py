@@ -1,5 +1,5 @@
 def test_runtime_deps_import():
-    import igraph  # noqa: F401
+    import igraph
     import numpy as np  # noqa: F401
     import scipy  # noqa: F401
 
@@ -7,7 +7,6 @@ def test_runtime_deps_import():
 
 
 import numpy as np
-
 from scripts.embed.atlas_core import (
     association_strength,
     collapse_edges,

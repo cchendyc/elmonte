@@ -7,12 +7,28 @@ from typing import Any
 
 from api.graphql.resolvers.errors import _decode_any, _decode_id
 from api.graphql.resolvers.registry import _session, query
+from api.id_codec import encode
 from api.repositories.orgs import _roster_count, _roster_page
 from api.services.graph import _expand_org, _expand_person
 from api.services.names import _full_name, _person_role
 
+MAX_PAGE_SIZE = 100
+
+
+def _bounded_offset(offset: int) -> int:
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        return 0
+    return offset
+
+
+def _bounded_page_size(limit: int) -> int:
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit < 0:
+        return 24
+    return min(limit, MAX_PAGE_SIZE)
+
+
 @query.field("expand")
-def resolve_expand(_obj, info, id: str, on: date | None = None) -> dict[str, Any]:  # noqa: A002
+def resolve_expand(_obj, info, id: str, on: date | None = None) -> dict[str, Any]:
     kind, row_id = _decode_any(id)
     as_of = on or date.today()
     session = _session(info)
@@ -33,9 +49,14 @@ def resolve_pages(
     as_of = on or date.today()
     session = _session(info)
     total = _roster_count(session, row_id, as_of)
-    items = _roster_page(session, row_id, as_of, offset=offset, limit=limit)
+    offset = _bounded_offset(offset)
+    limit = _bounded_page_size(limit)
+    if limit == 0 or offset >= total:
+        items: list[dict[str, Any]] = []
+    else:
+        items = _roster_page(session, row_id, as_of, offset=offset, limit=limit)
     return {
-        "ownerId": ownerId,
+        "ownerId": encode("org", row_id),
         "groupKey": groupKey,
         "offset": offset + len(items),
         "total": total,
