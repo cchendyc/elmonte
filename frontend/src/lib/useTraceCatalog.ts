@@ -7,6 +7,7 @@ import {
   type OrgChildrenVars,
   type OrgUnit,
   type UniversitiesData,
+  type UniversitiesVars,
 } from "../api/queries";
 import type { SessionState } from "./graphSession";
 import {
@@ -19,10 +20,13 @@ const EMPTY_UNIVERSITIES: OrgUnit[] = [];
 
 export function useTraceCatalog(session: SessionState) {
   const client = useApolloClient();
-  const { data: uniData, loading: uniLoading } = useQuery<UniversitiesData>(
-    UNIVERSITIES,
-    { fetchPolicy: "cache-first" },
-  );
+  const { data: uniData, loading: uniLoading } = useQuery<
+    UniversitiesData,
+    UniversitiesVars
+  >(UNIVERSITIES, {
+    variables: { limit: 40 },
+    fetchPolicy: "cache-first",
+  });
   const [childrenByParent, setChildrenByParent] = useState<
     Record<string, OrgUnit[]>
   >({});

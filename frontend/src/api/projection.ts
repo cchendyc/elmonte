@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const PROJECTION = gql`
-  query Projection($view: String!) {
-    projection(view: $view) {
+  query Projection($view: String!, $includeEdges: Boolean = false) {
+    projection(view: $view, includeEdges: $includeEdges) {
       runId
       algorithm
       view
@@ -30,12 +30,17 @@ export const PROJECTION = gql`
         cy
         colorSlot
       }
-      edges {
-        sourceCluster
-        targetCluster
-        collaborationWeight
-        topicWeight
-      }
+    }
+  }
+`;
+
+export const PROJECTION_EDGES = gql`
+  query ProjectionEdges($view: String!, $edgeType: String!, $maxEdges: Int) {
+    projectionEdges(view: $view, edgeType: $edgeType, maxEdges: $maxEdges) {
+      sourceCluster
+      targetCluster
+      collaborationWeight
+      topicWeight
     }
   }
 `;
@@ -79,7 +84,7 @@ export interface Projection {
   pointCount: number;
   points: ProjectionPoint[];
   clusters: ProjectionCluster[];
-  edges: ProjectionClusterEdge[];
+  edges?: ProjectionClusterEdge[];
 }
 
 export interface ProjectionData {
@@ -88,4 +93,9 @@ export interface ProjectionData {
 
 export interface ProjectionVars {
   view: string;
+  includeEdges?: boolean;
+}
+
+export interface ProjectionEdgesData {
+  projectionEdges: ProjectionClusterEdge[];
 }

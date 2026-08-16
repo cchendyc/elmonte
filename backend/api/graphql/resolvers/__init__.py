@@ -14,6 +14,7 @@ from api.graphql.resolvers.perspective import resolve_perspective
 from api.graphql.resolvers.projection import (
     resolve_person_coauthor_ties,
     resolve_projection,
+    resolve_projection_edges,
 )
 from api.graphql.resolvers.registry import _session, query
 from api.graphql.resolvers.scalars import date_scalar
@@ -39,6 +40,7 @@ __all__ = [
     "resolve_person_export",
     "resolve_perspective",
     "resolve_projection",
+    "resolve_projection_edges",
     "resolve_search",
     "resolve_universities",
 ]

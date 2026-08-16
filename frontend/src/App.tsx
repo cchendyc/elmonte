@@ -88,8 +88,12 @@ function AppHeader() {
 
   const { data, loading, error } = useQuery<SearchData, SearchVars>(SEARCH, {
     variables: { q: debounced, limit: 10 },
-    skip: debounced.length < 1,
-    fetchPolicy: "network-only",
+    // One-character searches are both noisy and rarely useful; two characters
+    // is where the trigram/prefix fallback starts to disambiguate.
+    skip: debounced.length < 2,
+    // Directory data changes only through offline ingest, so repeated queries
+    // within a session should hit Apollo's cache instead of the rate-limited API.
+    fetchPolicy: "cache-first",
   });
 
   const peopleMatches = data?.search.people ?? [];
@@ -107,8 +111,10 @@ function AppHeader() {
 
   const showSearchPanel = debounced.length > 0;
   const isSearching = showSearchPanel && loading && !data;
+  const showTypingHint = debounced.length === 1;
   const showEmptyResults =
     showSearchPanel &&
+    !showTypingHint &&
     !loading &&
     !error &&
     peopleMatches.length === 0 &&
@@ -239,6 +245,9 @@ function AppHeader() {
                 {isSearching && (
                   <p className="search-results__status">Searching…</p>
                 )}
+                  {showTypingHint && !isSearching && (
+                    <p className="search-results__status">Keep typing to search…</p>
+                  )}
                 {error && (
                   <p className="search-results__status search-results__status--error">
                     Search is unavailable right now. Check that the API is running.

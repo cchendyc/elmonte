@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PROJECTION, type ProjectionData } from "../api/projection";
-import { UNIVERSITIES, type UniversitiesData } from "../api/queries";
+import { UNIVERSITIES, type UniversitiesData, type UniversitiesVars } from "../api/queries";
 import { rankLabel, type PositionRank } from "../lib/positionRank";
 
 type TableTab = "people" | "organizations";
@@ -28,7 +28,10 @@ export function DataTablesPage() {
       fetchPolicy: "cache-first",
     });
   const { data: orgs, loading: orgsLoading, error: orgsError } =
-    useQuery<UniversitiesData>(UNIVERSITIES, { fetchPolicy: "cache-first" });
+    useQuery<UniversitiesData, UniversitiesVars>(UNIVERSITIES, {
+      variables: { limit: 500 },
+      fetchPolicy: "cache-first",
+    });
 
   const people = projection?.projection.points ?? EMPTY_PEOPLE;
   const universities = orgs?.universities ?? EMPTY_ORGS;
