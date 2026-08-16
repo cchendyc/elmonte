@@ -23,11 +23,25 @@ from api.repositories.orgs import (
 )
 from api.services.orgs import _org_label, _org_sublabel, _org_unit
 
+MAX_UNIVERSITY_LIMIT = 500
+DEFAULT_UNIVERSITY_LIMIT = 24
+
+
+def _bounded_university_limit(limit: int) -> int:
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        return DEFAULT_UNIVERSITY_LIMIT
+    return max(0, min(limit, MAX_UNIVERSITY_LIMIT))
+
 
 @query.field("universities")
-def resolve_universities(_obj, info, on: date | None = None) -> list[dict[str, Any]]:
+def resolve_universities(
+    _obj, info, on: date | None = None, limit: int = DEFAULT_UNIVERSITY_LIMIT
+) -> list[dict[str, Any]]:
     session = _session(info)
     as_of = on or date.today()
+    limit = _bounded_university_limit(limit)
+    if limit == 0:
+        return []
     base = select(Organization).where(
         Organization.kind == "university",
         (Organization.is_context_only.is_(None))
@@ -48,12 +62,14 @@ def resolve_universities(_obj, info, on: date | None = None) -> list[dict[str, A
                       AND (organizations.is_context_only IS FALSE
                            OR organizations.is_context_only IS NULL)
                     ORDER BY t.subtree_person_count DESC, organizations.name
+                    LIMIT :limit
                     """
                 )
-            )
+            ),
+            {"limit": limit},
         ).scalars().all()
     else:
-        units = session.execute(base.order_by(Organization.name)).scalars().all()
+        units = session.execute(base.order_by(Organization.name).limit(limit)).scalars().all()
     child_counts = _children_counts(session, [u.id for u in units], as_of)
     roster_counts = _roster_counts(session, [u.id for u in units], as_of)
     return [

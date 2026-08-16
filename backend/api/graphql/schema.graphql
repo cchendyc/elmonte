@@ -379,8 +379,11 @@ type Query {
   """Trigram search over people (name/alias) and organizations (name/shortName)."""
   search(q: String!, limit: Int = 10): SearchResults!
 
-  """All universities for the trace picker (Stanford, Berkeley, …)."""
-  universities(on: Date): [OrgUnit!]!
+  """
+  All universities for the trace picker, ordered by subtree population.
+  `limit` keeps the native picker readable; header search covers every org.
+  """
+  universities(on: Date, limit: Int = 24): [OrgUnit!]!
 
   """Full institution page profile (directory metadata + hierarchy summary)."""
   org(id: ID!, on: Date): OrgProfile
@@ -389,10 +392,21 @@ type Query {
   orgChildren(parentId: ID!, on: Date): [OrgUnit!]!
 
   """
-  All points/clusters/edges in the active atlas run for the requested view
-  ("topic" or "network"). Cheap enough to send in one shot at school scale.
+  All points/clusters in the active atlas run for the requested view.
+  Cluster edges are served separately via `projectionEdges` so the expensive
+  point query is not re-fetched when the UI toggles edge semantics.
   """
-  projection(view: String = "topic"): Projection!
+  projection(view: String = "topic", includeEdges: Boolean = true): Projection!
+
+  """
+  Top inter-cluster edges for a view and weight semantic. `maxEdges` bounds
+  the payload; the scatter renders only the strongest edges anyway.
+  """
+  projectionEdges(
+    view: String = "topic"
+    edgeType: String = "collaboration"
+    maxEdges: Int = 30
+  ): [ProjectionClusterEdge!]!
 
   """
   Coauthorship edges for scatter overlay when a person is focused.

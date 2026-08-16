@@ -11,9 +11,10 @@ import type {
   ProjectionCluster,
   ProjectionClusterEdge,
   ProjectionData,
+  ProjectionEdgesData,
   ProjectionPoint,
 } from "../api/projection";
-import { PROJECTION } from "../api/projection";
+import { PROJECTION, PROJECTION_EDGES } from "../api/projection";
 import type { CoauthorTie, PersonCoauthorTiesData } from "../api/coauthorTies";
 import { PERSON_COAUTHOR_TIES } from "../api/coauthorTies";
 import {
@@ -412,7 +413,11 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
   const [edgeType, setEdgeType] = useState<EdgeType>(loadEdgeType);
 
   const { data, loading, error } = useQuery<ProjectionData>(PROJECTION, {
-    variables: { view },
+    variables: { view, includeEdges: false },
+    fetchPolicy: "cache-first",
+  });
+  const { data: edgeData } = useQuery<ProjectionEdgesData>(PROJECTION_EDGES, {
+    variables: { view, edgeType, maxEdges: 30 },
     fetchPolicy: "cache-first",
   });
   // Flicker fix: when a view is refetched, Apollo briefly returns
@@ -440,7 +445,7 @@ export function PeopleScatter({ focusId, onFocus, minHeight, className }: Props)
     [rawPoints],
   );
   const clusters = projection?.clusters ?? EMPTY_CLUSTERS;
-  const edges = projection?.edges ?? EMPTY_EDGES;
+  const edges = edgeData?.projectionEdges ?? EMPTY_EDGES;
   const runId = projection?.runId;
 
   const personFocus =

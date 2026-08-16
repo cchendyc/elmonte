@@ -8,6 +8,7 @@ from api.graphql.resolvers.perspective import resolve_perspective
 from api.graphql.resolvers.projection import (
     resolve_person_coauthor_ties,
     resolve_projection,
+    resolve_projection_edges,
 )
 from api.graphql.resolvers.search import resolve_search
 from api.graphql.resolvers.universities import resolve_org, resolve_universities
@@ -44,6 +45,32 @@ def test_projection_network_view(session):
     out = resolve_projection(None, info, view="network")
     assert out["view"] == "network"
     assert out["pointCount"] == len(out["points"]) > 0
+
+
+@pytest.mark.integration
+def test_projection_can_skip_edges_for_payload_optimization(session):
+    """Frontend now requests points/clusters and top-K edges separately."""
+    info = FakeInfo(session)
+    light = resolve_projection(None, info, view="topic", includeEdges=False)
+    full = resolve_projection(None, info, view="topic")
+    assert light["pointCount"] == full["pointCount"]
+    assert light["edges"] == []
+    assert full["edges"]
+
+
+@pytest.mark.integration
+def test_projection_edges_are_top_k_and_bounded(session):
+    info = FakeInfo(session)
+    edges = resolve_projection_edges(
+        None, info, view="topic", edgeType="topic", maxEdges=10
+    )
+    assert 0 < len(edges) <= 10
+    assert all(e["sourceCluster"] != e["targetCluster"] for e in edges)
+    topic_weights = [
+        e["topicWeight"] for e in edges if e["topicWeight"] is not None
+    ]
+    assert topic_weights == sorted(topic_weights, reverse=True)
+    assert resolve_projection_edges(None, info, maxEdges=0) == []
 
 
 @pytest.mark.integration
@@ -173,7 +200,10 @@ def test_universities_shape(session):
 
     info = FakeInfo(session)
     out = resolve_universities(None, info)
-    assert len(out) > 0
+    assert 0 < len(out) <= 24
+    limited = resolve_universities(None, info, limit=2)
+    assert len(limited) <= 2
+    assert resolve_universities(None, info, limit=0) == []
     for unit in out:
         assert unit["label"]
         assert unit["id"].startswith("o:")

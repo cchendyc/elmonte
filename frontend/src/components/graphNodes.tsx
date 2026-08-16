@@ -44,7 +44,20 @@ const PersonNodeImpl = ({ data }: NodeProps) => {
     .join(" ");
 
   return (
-    <div className={className} style={fadeStyle(d.fade)} onClick={d.onSelect}>
+    <div
+      className={className}
+      style={fadeStyle(d.fade)}
+      onClick={d.onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          d.onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Person: ${d.name}`}
+    >
       <Handle type="target" position={Position.Top} className="graph-handle" isConnectable={false} />
       <div className="graph-node__body">
         <div className="graph-node__name" data-len={nameLenTier(d.name)}>
@@ -94,7 +107,20 @@ const OrgNodeImpl = ({ data }: NodeProps) => {
     .join(" ");
 
   return (
-    <div className={className} style={fadeStyle(d.fade)} onClick={d.onSelect}>
+    <div
+      className={className}
+      style={fadeStyle(d.fade)}
+      onClick={d.onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          d.onSelect();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Organization: ${d.name}`}
+    >
       <Handle type="target" position={Position.Top} className="graph-handle" isConnectable={false} />
       <div className="graph-node__body">
         <div className="graph-node__name" data-len={nameLenTier(d.name)}>

@@ -52,6 +52,17 @@ def _store_projection(key: tuple[str, int, str], payload: dict[str, Any]) -> Non
         _PROJECTION_CACHE[key] = (time.monotonic(), payload)
 
 
+def _cluster_ids_for_run(session, run_id: int, view: str) -> set[int]:
+    rows = session.execute(
+        text(
+            "SELECT cluster_index FROM projection_clusters "
+            "WHERE run_id = :run_id AND view = :view"
+        ),
+        {"run_id": run_id, "view": view},
+    ).scalars().all()
+    return {int(row) for row in rows}
+
+
 def _empty_projection(view: str) -> dict[str, Any]:
     return {
         "runId": "",
@@ -64,8 +75,24 @@ def _empty_projection(view: str) -> dict[str, Any]:
     }
 
 
+MAX_PROJECTION_EDGES = 1000
+DEFAULT_PROJECTION_EDGES = 30
+
+
+def _bounded_edge_limit(limit: int) -> int:
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        return DEFAULT_PROJECTION_EDGES
+    return max(0, min(limit, MAX_PROJECTION_EDGES))
+
+
+def _edge_type_key(edge_type: str) -> str:
+    return edge_type if edge_type in ("collaboration", "topic") else "collaboration"
+
+
 @query.field("projection")
-def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
+def resolve_projection(
+    _obj, info, view: str = "topic", includeEdges: bool = True
+) -> dict[str, Any]:
     view = view if view in ("topic", "network") else "topic"
     session = _session(info)
 
@@ -73,19 +100,20 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
     # run the same heavy SQL N times.  The process-level TTL cache handles
     # cross-request reuse; this handles alias amplification inside one request.
     request_cache = info.context.setdefault("_projection_cache", {})
-    if view in request_cache:
-        return request_cache[view]
+    request_key = (view, bool(includeEdges))
+    if request_key in request_cache:
+        return request_cache[request_key]
 
     active = _active_projection_run(session)
     if active is None:
         payload = _empty_projection(view)
-        request_cache[view] = payload
+        request_cache[request_key] = payload
         return payload
 
-    cache_key = (view, int(active["id"]), date.today().isoformat())
+    cache_key = (view, int(active["id"]), date.today().isoformat(), bool(includeEdges))
     cached = _cached_projection(cache_key)
     if cached is not None:
-        request_cache[view] = cached
+        request_cache[request_key] = cached
         return cached
 
     rows = session.execute(
@@ -238,38 +266,9 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
         }
         for point in points
     ]
-    edges = [
-        {
-            "sourceCluster": int(row["source_cluster"]),
-            "targetCluster": int(row["target_cluster"]),
-            "collaborationWeight": row["collaboration_weight"],
-            "topicWeight": row["topic_weight"],
-        }
-        for row in session.execute(
-            text(
-                "SELECT source_cluster, target_cluster, collaboration_weight, topic_weight "
-                "FROM projection_cluster_edges WHERE run_id = :run_id AND view = :view"
-            ),
-            {"run_id": active["id"], "view": view},
-        ).mappings().all()
-    ]
-    edges = [
-        edge
-        for edge in edges
-        if edge["sourceCluster"] in cluster_ids
-        and edge["targetCluster"] in cluster_ids
-        and (
-            edge["collaborationWeight"] is None
-            or (
-                math.isfinite(edge["collaborationWeight"])
-                and edge["collaborationWeight"] >= 0
-            )
-        )
-        and (
-            edge["topicWeight"] is None
-            or (math.isfinite(edge["topicWeight"]) and edge["topicWeight"] >= 0)
-        )
-    ]
+    edges = []
+    if includeEdges:
+        edges = _load_cluster_edges(session, int(active["id"]), view, None, cluster_ids)
     payload = {
         "runId": str(active["id"]),
         "algorithm": active["algorithm"],
@@ -280,8 +279,90 @@ def resolve_projection(_obj, info, view: str = "topic") -> dict[str, Any]:
         "edges": edges,
     }
     _store_projection(cache_key, payload)
-    request_cache[view] = payload
+    request_cache[request_key] = payload
     return payload
+
+
+def _load_cluster_edges(
+    session,
+    run_id: int,
+    view: str,
+    edge_type: str | None,
+    cluster_ids: set[int],
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Read, sanitize, and optionally top-K cluster edges for one view."""
+    if edge_type is None:
+        order_sql = "ORDER BY source_cluster, target_cluster"
+    elif edge_type == "topic":
+        order_sql = (
+            "ORDER BY coalesce(topic_weight, 0) DESC, "
+            "collaboration_weight DESC NULLS LAST, source_cluster, target_cluster"
+        )
+    else:
+        order_sql = (
+            "ORDER BY coalesce(collaboration_weight, 0) DESC, "
+            "topic_weight DESC NULLS LAST, source_cluster, target_cluster"
+        )
+    limit_sql = "LIMIT :limit" if limit is not None else ""
+    rows = session.execute(
+        text(
+            f"""
+            SELECT source_cluster, target_cluster, collaboration_weight, topic_weight
+            FROM projection_cluster_edges
+            WHERE run_id = :run_id AND view = :view
+            {order_sql}
+            {limit_sql}
+            """
+        ),
+        {"run_id": run_id, "view": view, **({"limit": limit} if limit is not None else {})},
+    ).mappings().all()
+
+    edges: list[dict[str, Any]] = []
+    for row in rows:
+        source = int(row["source_cluster"])
+        target = int(row["target_cluster"])
+        if source not in cluster_ids or target not in cluster_ids:
+            continue
+        collab = row["collaboration_weight"]
+        topic = row["topic_weight"]
+        if collab is not None and (not math.isfinite(collab) or collab < 0):
+            continue
+        if topic is not None and (not math.isfinite(topic) or topic < 0):
+            continue
+        edges.append(
+            {
+                "sourceCluster": source,
+                "targetCluster": target,
+                "collaborationWeight": collab,
+                "topicWeight": topic,
+            }
+        )
+    return edges
+
+
+@query.field("projectionEdges")
+def resolve_projection_edges(
+    _obj,
+    info,
+    view: str = "topic",
+    edgeType: str = "collaboration",
+    maxEdges: int = DEFAULT_PROJECTION_EDGES,
+) -> list[dict[str, Any]]:
+    """Top-K inter-cluster edges without re-reading the point projection."""
+    view = view if view in ("topic", "network") else "topic"
+    edge_type = _edge_type_key(edgeType)
+    limit = _bounded_edge_limit(maxEdges)
+    if limit == 0:
+        return []
+    session = _session(info)
+    active = _active_projection_run(session)
+    if active is None:
+        return []
+    cluster_ids = _cluster_ids_for_run(session, int(active["id"]), view)
+    return _load_cluster_edges(
+        session, int(active["id"]), view, edge_type, cluster_ids, limit
+    )
 
 
 @query.field("personCoauthorTies")

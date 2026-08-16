@@ -263,8 +263,8 @@ export const PERSON_EXPORT = gql`
 `;
 
 export const UNIVERSITIES = gql`
-  query Universities($on: Date) {
-    universities(on: $on) {
+  query Universities($on: Date, $limit: Int) {
+    universities(on: $on, limit: $limit) {
       id
       label
       orgKind
@@ -546,6 +546,11 @@ export interface OrgProfileVars {
 
 export interface UniversitiesData {
   universities: OrgUnit[];
+}
+
+export interface UniversitiesVars {
+  on?: string;
+  limit?: number;
 }
 
 export interface OrgChildrenData {
